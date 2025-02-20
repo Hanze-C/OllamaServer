@@ -11,11 +11,14 @@ import {
     StyleSheet, ToastAndroid, ListRenderItem,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import {useNavigation} from '@react-navigation/native';
+import {NavigationProp, ParamListBase, useNavigation} from '@react-navigation/native';
 import ModelSelector from "../components/ModelSelector.tsx";
 import {CustomProgressBarWithoutProgressModal} from "../components/CustomModal.tsx";
 import {chat, loadModel} from "../utils/OllamaApi.ts";
 import Markdown from "react-native-markdown-display";
+import {DrawerNavigationProp} from "@react-navigation/drawer";
+
+type HomeScreenNavigationProp = NavigationProp<ParamListBase> & DrawerNavigationProp<ParamListBase>;
 
 const HomePage = () => {
     //加载模型
@@ -35,7 +38,7 @@ const HomePage = () => {
     //接收到的消息请求
     const chatSessionRef = useRef<ChatSessionType | null>(null);
 
-    const navigation = useNavigation();
+    const navigation = useNavigation<HomeScreenNavigationProp>();
 
     const handleSettingsPress = () => {
         // @ts-ignore
@@ -160,7 +163,7 @@ const HomePage = () => {
                 <View style={styles.header}>
                     <TouchableOpacity
                         style={styles.menuButton}
-                        onPress={() => {}}>
+                        onPress={() => {navigation.openDrawer()}}>
                         <Icon name="menu" size={24} color="#000000" />
                     </TouchableOpacity>
                     <ModelSelector
@@ -307,7 +310,7 @@ const styles = StyleSheet.create({
     header: {
         height: 60,
         backgroundColor: '#ffffff',
-        justifyContent: 'space-between',
+        justifyContent: 'center',
         alignItems: 'center',
         borderBottomWidth: 1,
         borderBottomColor: '#e0e0e0',
@@ -319,7 +322,8 @@ const styles = StyleSheet.create({
         right: 16,
     },
     menuButton: {
-        marginRight: 16,
+        position: 'absolute',
+        left: 16,
     },
     headerText: {
         fontSize: 18,
@@ -425,11 +429,6 @@ const styles = StyleSheet.create({
         color: '#ffffff',
         fontSize: 16,
         fontWeight: '600',
-    },
-    think: {
-        color: '#1E90FF',
-        fontStyle: 'italic',
-        fontSize: 14,
     },
 });
 
