@@ -77,9 +77,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.ollamaserver"
+    namespace "io.kindbrave.ollamaserver"
     defaultConfig {
-        applicationId "com.ollamaserver"
+        applicationId "io.kindbrave.ollamaserver"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
@@ -116,4 +116,11 @@ dependencies {
     } else {
         implementation jscFlavor
     }
+    implementation(project(':react-native-fs'))
 }
+
+project.ext.vectoricons = [
+        iconFontNames: [ 'MaterialIcons.ttf', 'MaterialCommunityIcons.ttf' ]
+]
+
+apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"

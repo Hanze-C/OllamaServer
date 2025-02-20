@@ -1,6 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>
 
     <application
       android:name=".MainApplication"
@@ -9,7 +11,9 @@
       android:roundIcon="@mipmap/ic_launcher_round"
       android:allowBackup="false"
       android:theme="@style/AppTheme"
-      android:supportsRtl="true">
+      android:supportsRtl="true"
+      android:extractNativeLibs="true"
+      android:usesCleartextTraffic="true">
       <activity
         android:name=".MainActivity"
         android:label="@string/app_name"
@@ -22,5 +26,9 @@
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
       </activity>
+        <service
+            android:name=".service.OllamaService"
+            android:foregroundServiceType="specialUse"
+            android:exported="false" />
     </application>
 </manifest>
