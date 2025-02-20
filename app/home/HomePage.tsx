@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, {useState, useRef, useEffect} from 'react';
 import {
     View,
     Text,
@@ -17,10 +17,18 @@ import {CustomProgressBarWithoutProgressModal} from "../components/CustomModal.t
 import {chat, loadModel} from "../utils/OllamaApi.ts";
 import Markdown from "react-native-markdown-display";
 import {DrawerNavigationProp} from "@react-navigation/drawer";
+import 'react-native-get-random-values';
+import { v4 as uuidv4 } from 'uuid';
+import {loadConversation, saveConversation} from "../utils/Storage.ts";
+import {getSummary} from "../utils/ChatUtils.ts";
+import {useAppTheme} from "../theme/ThemeContext.tsx";
+import {useSafeAreaInsets} from "react-native-safe-area-context";
 
 type HomeScreenNavigationProp = NavigationProp<ParamListBase> & DrawerNavigationProp<ParamListBase>;
 
-const HomePage = () => {
+const HomePage = ({ route }) => {
+    const theme = useAppTheme();
+    const insets = useSafeAreaInsets();
     //加载模型
     const [loadingModalVisible, setLoadingModalVisible] = useState(false)
     //输入消息
@@ -37,12 +45,39 @@ const HomePage = () => {
     const [chatting, setChatting] = useState(false)
     //接收到的消息请求
     const chatSessionRef = useRef<ChatSessionType | null>(null);
+    //对话唯一标识
+    const conversationUuidRef = useRef(uuidv4());
 
     const navigation = useNavigation<HomeScreenNavigationProp>();
 
-    const handleSettingsPress = () => {
-        // @ts-ignore
-        navigation.navigate('Settings');
+    // effect处理对话加载
+    useEffect(() => {
+        const loadExistingConversation = async () => {
+            if (route.params?.conversationId) {
+                const existing = await loadConversation(route.params.conversationId);
+                if (existing) {
+                    messagesRef.current = existing.messages;
+                    setMessagesState(existing.messages);
+                    conversationUuidRef.current = route.params.conversationId; // 更新当前对话ID
+                }
+            }
+        };
+        loadExistingConversation();
+    }, [route.params?.conversationId, route.params?.timestamp]); // 添加timestamp依赖
+
+    const handleNewPress = () => {
+        //已经是新对话
+        if (messagesRef.current.length === 0) {
+            return
+        }
+        saveConversation(conversationUuidRef.current, messagesRef.current, getSummary(messagesRef.current))
+            .then(r => {
+                //更新对话唯一表示
+                conversationUuidRef.current = uuidv4();
+                //清除历史消息
+                messagesRef.current = []
+                setMessagesState([]);
+            })
     };
 
     const handleSend = () => {
@@ -53,6 +88,8 @@ const HomePage = () => {
             lastMsg.content += '(User Cancel)'
             messagesRef.current[messagesRef.current.length - 1] = lastMsg;
             setMessagesState([...messagesRef.current]);
+            // 保存对话
+            saveConversation(conversationUuidRef.current, messagesRef.current, getSummary(messagesRef.current))
             return
         }
         if (message.trim()) {
@@ -65,6 +102,8 @@ const HomePage = () => {
             // 同时更新ref和state
             messagesRef.current = [...messagesRef.current, userMsg]
             setMessagesState(messagesRef.current)
+            // 保存对话
+            saveConversation(conversationUuidRef.current, messagesRef.current, getSummary(messagesRef.current))
             setMessage('')
             flatListRef.current?.scrollToEnd({ animated: true })
 
@@ -89,6 +128,8 @@ const HomePage = () => {
             }).finally(() => {
                 setChatting(false)
                 chatSessionRef.current = null
+                // 回答完毕后保存对话
+                saveConversation(conversationUuidRef.current, messagesRef.current, getSummary(messagesRef.current))
             })
         }
     }
@@ -156,6 +197,217 @@ const HomePage = () => {
         </View>
     );
 
+    const assistantMarkdownStyles = {
+        heading1: {
+            fontSize: 24,
+            fontWeight: 'bold',
+            color: '#000',
+            marginBottom: 8,
+        },
+        heading2: {
+            fontSize: 20,
+            fontWeight: 'bold',
+            color: '#000',
+            marginBottom: 8,
+        },
+        paragraph: {
+            fontSize: 16,
+            color: '#000',
+            marginBottom: 8,
+        },
+        code_block: {
+            backgroundColor: '#f0f0f0',
+            padding: 8,
+            borderRadius: 4,
+            fontSize: 14,
+            color: '#000',
+            fontFamily: 'Courier',
+        },
+        blockquote: {
+            backgroundColor: 'rgba(0,0,0,0)',  // 背景色
+            borderLeftColor: 'rgba(0,0,0,0)',  // 左边框颜色
+            borderLeftWidth: 0,          // 左边框宽度
+            paddingHorizontal: 0,       // 水平内边距
+            paddingVertical: 0,          // 垂直内边距
+            marginVertical: 0,           // 垂直外边距
+            borderRadius: 0,             // 圆角
+            fontStyle: 'italic',         // 字体样式
+        },
+    };
+
+    const userMarkdownStyles = {
+        heading1: {
+            fontSize: 24,
+            fontWeight: 'bold',
+            color: '#fff',
+            marginBottom: 8,
+        },
+        heading2: {
+            fontSize: 20,
+            fontWeight: 'bold',
+            color: '#fff',
+            marginBottom: 8,
+        },
+        paragraph: {
+            fontSize: 16,
+            color: '#fff',
+            marginBottom: 8,
+        },
+        code_block: {
+            backgroundColor: '#f0f0f0',
+            padding: 8,
+            borderRadius: 4,
+            fontSize: 14,
+            color: '#fff',
+            fontFamily: 'Courier',
+        },
+        blockquote: {
+            backgroundColor: 'rgba(0,0,0,0)',  // 背景色
+            borderLeftColor: 'rgba(0,0,0,0)',  // 左边框颜色
+            borderLeftWidth: 0,          // 左边框宽度
+            paddingHorizontal: 0,       // 水平内边距
+            paddingVertical: 0,          // 垂直内边距
+            marginVertical: 0,           // 垂直外边距
+            borderRadius: 0,             // 圆角
+            fontStyle: 'italic',         // 字体样式
+        },
+    };
+
+    const styles = StyleSheet.create({
+        container: {
+            flex: 1,
+            backgroundColor: theme.colors.background,
+            paddingTop: insets.top,
+        },
+        safeArea: {
+            flex: 1,
+        },
+        header: {
+            height: 60,
+            backgroundColor: theme.colors.background,
+            justifyContent: 'center',
+            alignItems: 'center',
+            borderBottomWidth: 1,
+            borderBottomColor: '#e0e0e0',
+            zIndex: 10,
+            flexDirection: 'row',
+        },
+        newButton: {
+            position: 'absolute',
+            right: 16,
+        },
+        menuButton: {
+            position: 'absolute',
+            left: 16,
+        },
+        headerText: {
+            fontSize: 18,
+            fontWeight: 'bold',
+        },
+        pickerContainer: {
+            height: 50,
+            backgroundColor: '#ffffff',
+            justifyContent: 'center',
+            alignItems: 'center',
+            borderBottomWidth: 1,
+            borderBottomColor: '#e0e0e0',
+        },
+        picker: {
+            height: 50,  // 明确设置高度
+            width: '100%',
+            backgroundColor: '#fff',
+        },
+        messagesContainer: {
+            flex: 1,
+            backgroundColor: '#f5f5f5',
+        },
+        messagesList: {
+            paddingHorizontal: 4,
+            paddingVertical: 16,
+            flexGrow: 1,
+        },
+        messageRow: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginVertical: 4,
+        },
+        botMessageRow: {
+            justifyContent: 'flex-start',
+        },
+        userMessageRow: {
+            justifyContent: 'flex-end',
+        },
+        messageContainer: {
+            maxWidth: '80%',
+            padding: 12,
+            borderRadius: 16,
+        },
+        avatarContainer: {
+            marginHorizontal: 8,
+        },
+        avatar: {
+            width: 32,
+            height: 32,
+            borderRadius: 16,
+            justifyContent: 'center',
+            alignItems: 'center',
+        },
+        botAvatar: {
+            backgroundColor: '#e0e0e0',
+        },
+        userAvatar: {
+            backgroundColor: theme.colors.secondary,
+        },
+        avatarText: {
+            color: '#ffffff',
+            fontSize: 14,
+            fontWeight: 'bold',
+        },
+        botMessage: {
+            backgroundColor: '#ffffff',
+            alignSelf: 'flex-start',
+            borderBottomLeftRadius: 4,
+        },
+        userMessage: {
+            backgroundColor: theme.colors.primary,
+            alignSelf: 'flex-end',
+            borderBottomRightRadius: 4,
+        },
+        inputContainer: {
+            flexDirection: 'row',
+            padding: 16,
+            backgroundColor: theme.colors.background,
+            borderTopWidth: 1,
+            borderTopColor: '#e0e0e0',
+        },
+        input: {
+            flex: 1,
+            backgroundColor: theme.colors.secondaryContainer,
+            borderRadius: 20,
+            paddingHorizontal: 16,
+            paddingVertical: 8,
+            marginRight: 8,
+            fontSize: 16,
+            maxHeight: 100,
+        },
+        sendButton: {
+            backgroundColor: theme.colors.primary,
+            color: theme.colors.onPrimary,
+            borderRadius: 20,
+            paddingHorizontal: 20,
+            justifyContent: 'center',
+            alignItems: 'center',
+        },
+        cancelButton: {
+            backgroundColor: theme.colors.error,
+        },
+        sendButtonText: {
+            color: theme.colors.onPrimary,
+            fontSize: 16,
+            fontWeight: '600',
+        },
+    });
+
     return (
         <View style={styles.container}>
             <SafeAreaView style={styles.safeArea}>
@@ -171,9 +423,9 @@ const HomePage = () => {
                         onModelSelect={handleModelSelect}
                     />
                     <TouchableOpacity
-                        style={styles.settingsButton}
-                        onPress={handleSettingsPress}>
-                        <Icon name="settings" size={24} color="#000000" />
+                        style={styles.newButton}
+                        onPress={handleNewPress}>
+                        <Icon name="add-comment" size={24} color="#000000" />
                     </TouchableOpacity>
                 </View>
 
@@ -222,214 +474,5 @@ const HomePage = () => {
         </View>
     );
 };
-
-const assistantMarkdownStyles = {
-    heading1: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#000',
-        marginBottom: 8,
-    },
-    heading2: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#000',
-        marginBottom: 8,
-    },
-    paragraph: {
-        fontSize: 16,
-        color: '#000',
-        marginBottom: 8,
-    },
-    code_block: {
-        backgroundColor: '#f0f0f0',
-        padding: 8,
-        borderRadius: 4,
-        fontSize: 14,
-        color: '#000',
-        fontFamily: 'Courier',
-    },
-    blockquote: {
-        backgroundColor: 'rgba(0,0,0,0)',  // 背景色
-        borderLeftColor: 'rgba(0,0,0,0)',  // 左边框颜色
-        borderLeftWidth: 0,          // 左边框宽度
-        paddingHorizontal: 0,       // 水平内边距
-        paddingVertical: 0,          // 垂直内边距
-        marginVertical: 0,           // 垂直外边距
-        borderRadius: 0,             // 圆角
-        fontStyle: 'italic',         // 字体样式
-    },
-};
-
-const userMarkdownStyles = {
-    heading1: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#fff',
-        marginBottom: 8,
-    },
-    heading2: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#fff',
-        marginBottom: 8,
-    },
-    paragraph: {
-        fontSize: 16,
-        color: '#fff',
-        marginBottom: 8,
-    },
-    code_block: {
-        backgroundColor: '#f0f0f0',
-        padding: 8,
-        borderRadius: 4,
-        fontSize: 14,
-        color: '#fff',
-        fontFamily: 'Courier',
-    },
-    blockquote: {
-        backgroundColor: 'rgba(0,0,0,0)',  // 背景色
-        borderLeftColor: 'rgba(0,0,0,0)',  // 左边框颜色
-        borderLeftWidth: 0,          // 左边框宽度
-        paddingHorizontal: 0,       // 水平内边距
-        paddingVertical: 0,          // 垂直内边距
-        marginVertical: 0,           // 垂直外边距
-        borderRadius: 0,             // 圆角
-        fontStyle: 'italic',         // 字体样式
-    },
-};
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#f5f5f5',
-    },
-    safeArea: {
-        flex: 1,
-    },
-    header: {
-        height: 60,
-        backgroundColor: '#ffffff',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderBottomWidth: 1,
-        borderBottomColor: '#e0e0e0',
-        zIndex: 10,
-        flexDirection: 'row',
-    },
-    settingsButton: {
-        position: 'absolute',
-        right: 16,
-    },
-    menuButton: {
-        position: 'absolute',
-        left: 16,
-    },
-    headerText: {
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-    pickerContainer: {
-        height: 50,
-        backgroundColor: '#ffffff',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderBottomWidth: 1,
-        borderBottomColor: '#e0e0e0',
-    },
-    picker: {
-        height: 50,  // 明确设置高度
-        width: '100%',
-        backgroundColor: '#fff',
-    },
-    messagesContainer: {
-        flex: 1,
-        backgroundColor: '#f5f5f5',
-    },
-    messagesList: {
-        paddingHorizontal: 4,
-        paddingVertical: 16,
-        flexGrow: 1,
-    },
-    messageRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginVertical: 4,
-    },
-    botMessageRow: {
-        justifyContent: 'flex-start',
-    },
-    userMessageRow: {
-        justifyContent: 'flex-end',
-    },
-    messageContainer: {
-        maxWidth: '80%',
-        padding: 12,
-        borderRadius: 16,
-    },
-    avatarContainer: {
-        marginHorizontal: 8,
-    },
-    avatar: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    botAvatar: {
-        backgroundColor: '#e0e0e0',
-    },
-    userAvatar: {
-        backgroundColor: '#007AFF',
-    },
-    avatarText: {
-        color: '#ffffff',
-        fontSize: 14,
-        fontWeight: 'bold',
-    },
-    botMessage: {
-        backgroundColor: '#ffffff',
-        alignSelf: 'flex-start',
-        borderBottomLeftRadius: 4,
-    },
-    userMessage: {
-        backgroundColor: '#007AFF',
-        alignSelf: 'flex-end',
-        borderBottomRightRadius: 4,
-    },
-    inputContainer: {
-        flexDirection: 'row',
-        padding: 16,
-        backgroundColor: '#ffffff',
-        borderTopWidth: 1,
-        borderTopColor: '#e0e0e0',
-    },
-    input: {
-        flex: 1,
-        backgroundColor: '#f0f0f0',
-        borderRadius: 20,
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        marginRight: 8,
-        fontSize: 16,
-        maxHeight: 100,
-    },
-    sendButton: {
-        backgroundColor: '#007AFF',
-        borderRadius: 20,
-        paddingHorizontal: 20,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    cancelButton: {
-        backgroundColor: '#d81901',
-    },
-    sendButtonText: {
-        color: '#ffffff',
-        fontSize: 16,
-        fontWeight: '600',
-    },
-});
 
 export default HomePage;
