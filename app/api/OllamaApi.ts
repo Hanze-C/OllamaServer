@@ -1,0 +1,235 @@
+import {OLLAMA_SERVER} from "./API.ts";
+import {NativeModules} from "react-native";
+
+export const pull = (modelName: string, pullResponseCallback: (response: PullResponse) => void, abortController?: AbortController): Promise<void> => {
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        let buffer = '';
+
+        xhr.open('POST', `${OLLAMA_SERVER}/api/pull`);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+
+        if (abortController) {
+            abortController.signal.addEventListener('abort', () => {
+                xhr.abort();
+                reject(new Error('Request aborted'));
+            });
+        }
+
+        xhr.onprogress = function() {
+            const newData = xhr.responseText.substr(buffer.length);
+            buffer += newData;
+
+            const line = newData;
+            if (line.trim() != '') {
+                try {
+                    const response: PullResponse = JSON.parse(line);
+                    pullResponseCallback(response);
+                } catch (error) {
+                    throw error;
+                }
+            }
+        };
+
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                resolve();
+            } else {
+                reject(new Error(`HTTP Error: ${xhr.status}`));
+            }
+        };
+
+        xhr.onerror = function() {
+            reject(new Error('Network Error'));
+        };
+
+        xhr.send(JSON.stringify({ model: modelName }));
+    });
+};
+
+// 获取全部模型
+export const tags = async (): Promise<OllamaTagResponse> => {
+    const response = await fetch(`${OLLAMA_SERVER}/api/tags`);
+    if (!response.ok) {
+        throw new Error(`HTTP Error: ${response.status}`);
+    }
+    return await response.json();
+};
+
+export const loadModel = async (modelName: string): Promise<LoadResponse> => {
+    const response = await fetch(`${OLLAMA_SERVER}/api/chat`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ model: modelName }),
+    });
+    if (!response.ok) {
+        throw new Error(`HTTP Error: ${response.status}`);
+    }
+    return await response.json();
+};
+
+export const chat = (
+    modelName: string,
+    messages: Message[],
+    chatResponseCallback:
+    (chatResponse: ChatResponse) => void
+): ChatSessionType => {
+    const xhr = new XMLHttpRequest();
+
+    const promise: Promise<void> = new Promise((resolve, reject) => {
+
+        let buffer = '';
+
+        xhr.open('POST', `${OLLAMA_SERVER}/api/chat`);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+
+        xhr.onprogress = function() {
+            const newData = xhr.responseText.substr(buffer.length);
+            buffer += newData;
+
+            const line = newData;
+            if (line.trim() != '') {
+                try {
+                    const response: ChatResponse = JSON.parse(line);
+                    chatResponseCallback(response);
+                } catch (error) {
+                    throw error;
+                }
+            }
+        };
+
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                resolve();
+            } else {
+                reject(new Error(`HTTP Error: ${xhr.status}`));
+            }
+        };
+
+        xhr.onerror = function() {
+            reject(new Error('Network Error'));
+        };
+
+        xhr.send(JSON.stringify({ model: modelName, messages: messages }));
+    });
+
+    return {
+        promise,
+        abort: () => {
+            xhr.abort();
+        }
+    }
+};
+
+// 获取正在运行模型
+export const ps = async (): Promise<OllamaPsResponse> => {
+    const response = await fetch(`${OLLAMA_SERVER}/api/ps`);
+    if (!response.ok) {
+        throw new Error(`HTTP Error: ${response.status}`);
+    }
+    return await response.json();
+}
+
+// 删除模型
+export const deleteModel = async (modelName: string): Promise<void> => {
+    const response = await fetch(`${OLLAMA_SERVER}/api/delete`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ model: modelName }),
+    });
+    if (!response.ok) {
+        throw new Error(`HTTP Error: ${response.status}`);
+    }
+}
+
+// 卸载运行模型
+export const unload = async (modelName: string): Promise<LoadResponse> => {
+    const response = await fetch(`${OLLAMA_SERVER}/api/chat`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            model: modelName,
+            messages: [],
+            keep_alive: 0,
+        }),
+    });
+    if (!response.ok) {
+        throw new Error(`HTTP Error: ${response.status}`);
+    }
+    return await response.json();
+}
+
+// export const pushBlob = (
+//     digest: string,
+//     file: Blob,
+//     progressCallback?: (progress: number) => void
+// ): Promise<void> => {
+//     return new Promise((resolve, reject) => {
+//         const xhr = new XMLHttpRequest();
+//         xhr.open('POST', `${OLLAMA_SERVER}/api/blobs/${digest}`);
+//
+//         // 监听进度事件
+//         if (progressCallback) {
+//             xhr.upload.onprogress = function(event) {
+//                 if (event.lengthComputable) {
+//                     const percentComplete = (event.loaded / event.total);
+//                     progressCallback(percentComplete);
+//                 }
+//             };
+//         }
+//
+//         xhr.onload = function() {
+//             if (xhr.status === 201) {
+//                 resolve();
+//             } else {
+//                 reject(new Error(`HTTP Error: ${xhr.status}`));
+//             }
+//         };
+//
+//         xhr.onerror = function() {
+//             reject(new Error('Network Error'));
+//         };
+//
+//         // 创建FormData对象来发送文件
+//         const formData = new FormData();
+//         formData.append('file', file);
+//
+//         xhr.send(formData);
+//     });
+// };
+
+// export const pushBlob = (filePath: string, digest: string) => {
+//     return FileSystem.uploadAsync(
+//         `${OLLAMA_SERVER}/api/blobs/sha256:${digest}`,
+//         filePath,
+//         {
+//             httpMethod: 'POST',
+//             uploadType: FileSystemUploadType.BINARY_CONTENT,
+//             headers: {
+//                 'Content-Type': 'application/octet-stream',
+//             },
+//         }
+//     )
+// }
+
+// export const pushBlob = async (filePath: string, digest: string) => {
+//     return ReactNativeBlobUtil.fetch('POST', `${OLLAMA_SERVER}/api/blobs/${digest}`, {
+//         // dropbox upload headers
+//         Authorization: "Bearer access-token...",
+//         'Dropbox-API-Arg': JSON.stringify({
+//             path: '/img-from-react-native.png',
+//             mode: 'add',
+//             autorename: true,
+//             mute: false
+//         }),
+//         'Content-Type': 'application/octet-stream',
+//         // Change BASE64 encoded data to a file path with prefix `ReactNativeBlobUtil-file://`.
+//         // Or simply wrap the file path with ReactNativeBlobUtil.wrap().
+//     }, ReactNativeBlobUtil.wrap(filePath))
+// }
