@@ -1,4 +1,3 @@
-// DrawerMenu.tsx
 import React, {useEffect, useState} from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -28,10 +27,13 @@ const DrawerMenu = (props: any) => {
     }, [drawerStatus]); // 监听抽屉状态变化
 
     return (
-        <DrawerContentScrollView {...props}>
+        <DrawerContentScrollView {...props}
+            style={{ backgroundColor: theme.colors.background }}
+        >
             <DrawerItem
                 label="Settings"
-                icon={({ color }) => <Icon name="settings" size={24} color={color} />}
+                labelStyle={{color: theme.colors.onSurface}}
+                icon={() => <Icon name="settings" size={24} color={theme.colors.onSurface} />}
                 onPress={() => props.navigation.navigate('Settings')}
             />
             <Divider />
@@ -40,7 +42,8 @@ const DrawerMenu = (props: any) => {
                 <DrawerItem
                     key={summary.id}
                     label={summary.summary}
-                    icon={({ color }) => <Icon name="history" size={24} color={color} />}
+                    labelStyle={{color: theme.colors.onSurface}}
+                    icon={() => <Icon name="history" size={24} color={theme.colors.onSurface} />}
                     onPress={() => props.navigation.navigate('Home', {
                         conversationId: summary.id,
                         timestamp: Date.now()   // 添加时间戳强制更新

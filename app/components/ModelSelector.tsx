@@ -9,10 +9,12 @@ import {
     ActivityIndicator,
     Animated,
 } from 'react-native';
-import {tags} from "../utils/OllamaApi.ts";
+import {tags} from "../api/OllamaApi.ts";
 import Icon from "react-native-vector-icons/MaterialIcons";
+import {useAppTheme} from "../theme/ThemeContext.tsx";
 
 const ModelSelector = ({ onModelSelect = (model: OllamaModel) => {}, currentModel = 'AI Assistant' }) => {
+    const theme = useAppTheme();
     const [visible, setVisible] = useState(false);
     const [models, setModels] = useState<OllamaModel[]>([]);
     const [loading, setLoading] = useState(false);
@@ -42,14 +44,17 @@ const ModelSelector = ({ onModelSelect = (model: OllamaModel) => {}, currentMode
     const fetchModels = async () => {
         setLoading(true);
         setError("");
-        try {
-            const response = await tags()
-            setModels(response.models);
-        } catch (err) {
-            setError('err');
-        } finally {
-            setLoading(false);
-        }
+
+        await tags()
+            .then((response) => {
+                setModels(response.models);
+            })
+            .catch((err)=>{
+                setError('err');
+            })
+            .finally(()=>{
+                setLoading(false);
+            })
     };
 
     const handleModelSelect = (model: OllamaModel) => {
@@ -67,6 +72,71 @@ const ModelSelector = ({ onModelSelect = (model: OllamaModel) => {}, currentMode
         </TouchableOpacity>
     );
 
+    const styles = StyleSheet.create({
+        header: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            paddingVertical: 12,
+        },
+        headerText: {
+            fontSize: 18,
+            fontWeight: '600',
+            marginRight: 8,
+            color: theme.colors.onSurface,
+        },
+        arrow: {
+            fontSize: 14,
+        },
+        modalOverlay: {
+            flex: 1,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            justifyContent: 'flex-start',
+        },
+        dropdownContainer: {
+            backgroundColor: 'white',
+            marginTop: 50,
+            marginHorizontal: 20,
+            borderRadius: 10,
+            maxHeight: '50%',
+            shadowColor: '#000',
+            shadowOffset: {
+                width: 0,
+                height: 2,
+            },
+            shadowOpacity: 0.25,
+            shadowRadius: 3.84,
+            elevation: 5,
+        },
+        modelList: {
+            flexGrow: 0,
+        },
+        modelItem: {
+            padding: 15,
+            borderBottomWidth: StyleSheet.hairlineWidth,
+            borderBottomColor: '#ccc',
+        },
+        modelText: {
+            fontSize: 16,
+            color: '#333',
+        },
+        loadingContainer: {
+            padding: 20,
+            alignItems: 'center',
+        },
+        loadingText: {
+            marginTop: 10,
+            color: '#666',
+        },
+        errorContainer: {
+            padding: 20,
+            alignItems: 'center',
+        },
+        errorText: {
+            color: '#ff3b30',
+        },
+    });
+
     return (
         <View>
             <TouchableOpacity
@@ -75,17 +145,10 @@ const ModelSelector = ({ onModelSelect = (model: OllamaModel) => {}, currentMode
                 activeOpacity={0.7}
             >
                 <Text style={styles.headerText}>{currentModel}</Text>
-                {/*<Animated.View style={{ transform: [{ rotate }] }}>*/}
-                {/*    <Icon*/}
-                {/*        name="keyboard-arrow-down"*/}
-                {/*        size={24}*/}
-                {/*        color="#666"*/}
-                {/*    />*/}
-                {/*</Animated.View>*/}
                 <Icon
                     name="keyboard-arrow-down"
                     size={24}
-                    color="#666"
+                    color={theme.colors.onSurface}
                 />
             </TouchableOpacity>
 
@@ -126,71 +189,5 @@ const ModelSelector = ({ onModelSelect = (model: OllamaModel) => {}, currentMode
         </View>
     );
 };
-
-const styles = StyleSheet.create({
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 12,
-        backgroundColor: 'white',
-    },
-    headerText: {
-        fontSize: 18,
-        fontWeight: '600',
-        marginRight: 8,
-    },
-    arrow: {
-        fontSize: 14,
-        color: '#666',
-    },
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        justifyContent: 'flex-start',
-    },
-    dropdownContainer: {
-        backgroundColor: 'white',
-        marginTop: 50,
-        marginHorizontal: 20,
-        borderRadius: 10,
-        maxHeight: '50%',
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-        elevation: 5,
-    },
-    modelList: {
-        flexGrow: 0,
-    },
-    modelItem: {
-        padding: 15,
-        borderBottomWidth: StyleSheet.hairlineWidth,
-        borderBottomColor: '#ccc',
-    },
-    modelText: {
-        fontSize: 16,
-        color: '#333',
-    },
-    loadingContainer: {
-        padding: 20,
-        alignItems: 'center',
-    },
-    loadingText: {
-        marginTop: 10,
-        color: '#666',
-    },
-    errorContainer: {
-        padding: 20,
-        alignItems: 'center',
-    },
-    errorText: {
-        color: '#ff3b30',
-    },
-});
 
 export default ModelSelector;

@@ -7,6 +7,7 @@ import LogPage from './logs/LogPage.tsx';
 import HomeDrawer from "./components/DrawerMenu.tsx";
 import {Material3ThemeProvider} from "./theme/ThemeContext.tsx";
 import {SafeAreaProvider} from "react-native-safe-area-context";
+import UploadModelPage from "./upload/UploadModelPage.tsx";
 
 const Stack = createNativeStackNavigator();
 
@@ -19,6 +20,7 @@ const App = () => {
                         <Stack.Screen name="Home" component={HomeDrawer} options={{ headerShown: false }} />
                         <Stack.Screen name="Settings" component={SettingsPage} options={{ headerShown: false }} />
                         <Stack.Screen name="Logs" component={LogPage} options={{ headerShown: false }} />
+                        <Stack.Screen name="UploadModel" component={UploadModelPage} options={{ headerShown: false }} />
                     </Stack.Navigator>
                 </NavigationContainer>
             </Material3ThemeProvider>

@@ -2,7 +2,6 @@ package io.kindbrave.ollamaserver.utils
 
 import android.content.Context
 import android.os.Build
-import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

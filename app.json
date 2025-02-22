@@ -1,4 +1,10 @@
 {
   "name": "OllamaServer",
-  "displayName": "OllamaServer"
+  "displayName": "OllamaServer",
+  "android": {
+    "package": "io.kindbrave.ollamaserver"
+  },
+  "ios": {
+    "bundleIdentifier": "io.kindbrave.ollamaserver"
+  }
 }

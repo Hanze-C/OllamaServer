@@ -11,14 +11,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import io.kindbrave.ollamaserver.module.OllamaServiceModule;
+import io.kindbrave.ollamaserver.module.FileUploadModule;
 
-public class OllamaServicePackage implements ReactPackage {
+public class FileUploadPackage implements ReactPackage {
     @NonNull
     @Override
     public List<NativeModule> createNativeModules(@NonNull ReactApplicationContext reactApplicationContext) {
         List<NativeModule> modules = new ArrayList<>();
-        modules.add(new OllamaServiceModule(reactApplicationContext));
+        modules.add(new FileUploadModule(reactApplicationContext));
         return modules;
     }
 

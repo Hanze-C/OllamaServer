@@ -8,13 +8,12 @@ import {
     SafeAreaView,
     KeyboardAvoidingView,
     Platform,
-    StyleSheet, ToastAndroid, ListRenderItem,
+    StyleSheet, ToastAndroid, ListRenderItem, ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import {NavigationProp, ParamListBase, useNavigation} from '@react-navigation/native';
 import ModelSelector from "../components/ModelSelector.tsx";
-import {CustomProgressBarWithoutProgressModal} from "../components/CustomModal.tsx";
-import {chat, loadModel} from "../utils/OllamaApi.ts";
+import {chat, loadModel} from "../api/OllamaApi.ts";
 import Markdown from "react-native-markdown-display";
 import {DrawerNavigationProp} from "@react-navigation/drawer";
 import 'react-native-get-random-values';
@@ -23,6 +22,7 @@ import {loadConversation, saveConversation} from "../utils/Storage.ts";
 import {getSummary} from "../utils/ChatUtils.ts";
 import {useAppTheme} from "../theme/ThemeContext.tsx";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
+import {Dialog, Portal} from "react-native-paper";
 
 type HomeScreenNavigationProp = NavigationProp<ParamListBase> & DrawerNavigationProp<ParamListBase>;
 
@@ -201,18 +201,18 @@ const HomePage = ({ route }) => {
         heading1: {
             fontSize: 24,
             fontWeight: 'bold',
-            color: '#000',
+            color: theme.colors.onSurface,
             marginBottom: 8,
         },
         heading2: {
             fontSize: 20,
             fontWeight: 'bold',
-            color: '#000',
+            color: theme.colors.onSurface,
             marginBottom: 8,
         },
         paragraph: {
             fontSize: 16,
-            color: '#000',
+            color: theme.colors.onSurface,
             marginBottom: 8,
         },
         code_block: {
@@ -220,7 +220,7 @@ const HomePage = ({ route }) => {
             padding: 8,
             borderRadius: 4,
             fontSize: 14,
-            color: '#000',
+            color: theme.colors.onSurface,
             fontFamily: 'Courier',
         },
         blockquote: {
@@ -239,7 +239,7 @@ const HomePage = ({ route }) => {
         heading1: {
             fontSize: 24,
             fontWeight: 'bold',
-            color: '#fff',
+            color: theme.colors.surface,
             marginBottom: 8,
         },
         heading2: {
@@ -250,7 +250,7 @@ const HomePage = ({ route }) => {
         },
         paragraph: {
             fontSize: 16,
-            color: '#fff',
+            color: theme.colors.surface,
             marginBottom: 8,
         },
         code_block: {
@@ -258,7 +258,7 @@ const HomePage = ({ route }) => {
             padding: 8,
             borderRadius: 4,
             fontSize: 14,
-            color: '#fff',
+            color: theme.colors.surface,
             fontFamily: 'Courier',
         },
         blockquote: {
@@ -284,11 +284,11 @@ const HomePage = ({ route }) => {
         },
         header: {
             height: 60,
-            backgroundColor: theme.colors.background,
+            backgroundColor: theme.colors.surface,
             justifyContent: 'center',
             alignItems: 'center',
             borderBottomWidth: 1,
-            borderBottomColor: '#e0e0e0',
+            borderBottomColor: theme.colors.surfaceContainerLow,
             zIndex: 10,
             flexDirection: 'row',
         },
@@ -300,26 +300,9 @@ const HomePage = ({ route }) => {
             position: 'absolute',
             left: 16,
         },
-        headerText: {
-            fontSize: 18,
-            fontWeight: 'bold',
-        },
-        pickerContainer: {
-            height: 50,
-            backgroundColor: '#ffffff',
-            justifyContent: 'center',
-            alignItems: 'center',
-            borderBottomWidth: 1,
-            borderBottomColor: '#e0e0e0',
-        },
-        picker: {
-            height: 50,  // 明确设置高度
-            width: '100%',
-            backgroundColor: '#fff',
-        },
         messagesContainer: {
             flex: 1,
-            backgroundColor: '#f5f5f5',
+            backgroundColor: theme.colors.surface,
         },
         messagesList: {
             paddingHorizontal: 4,
@@ -353,18 +336,18 @@ const HomePage = ({ route }) => {
             alignItems: 'center',
         },
         botAvatar: {
-            backgroundColor: '#e0e0e0',
+            backgroundColor: theme.colors.secondary,
         },
         userAvatar: {
             backgroundColor: theme.colors.secondary,
         },
         avatarText: {
-            color: '#ffffff',
+            color: theme.colors.onSecondary,
             fontSize: 14,
             fontWeight: 'bold',
         },
         botMessage: {
-            backgroundColor: '#ffffff',
+            backgroundColor: theme.colors.inverseOnSurface,
             alignSelf: 'flex-start',
             borderBottomLeftRadius: 4,
         },
@@ -378,7 +361,7 @@ const HomePage = ({ route }) => {
             padding: 16,
             backgroundColor: theme.colors.background,
             borderTopWidth: 1,
-            borderTopColor: '#e0e0e0',
+            borderTopColor: theme.colors.surfaceContainerLow,
         },
         input: {
             flex: 1,
@@ -404,8 +387,10 @@ const HomePage = ({ route }) => {
         sendButtonText: {
             color: theme.colors.onPrimary,
             fontSize: 16,
-            fontWeight: '600',
         },
+        text: {
+            color: theme.colors.onSurface
+        }
     });
 
     return (
@@ -416,7 +401,7 @@ const HomePage = ({ route }) => {
                     <TouchableOpacity
                         style={styles.menuButton}
                         onPress={() => {navigation.openDrawer()}}>
-                        <Icon name="menu" size={24} color="#000000" />
+                        <Icon name="menu" size={24} color={theme.colors.onSurface} />
                     </TouchableOpacity>
                     <ModelSelector
                         currentModel={selectedModel}
@@ -425,7 +410,7 @@ const HomePage = ({ route }) => {
                     <TouchableOpacity
                         style={styles.newButton}
                         onPress={handleNewPress}>
-                        <Icon name="add-comment" size={24} color="#000000" />
+                        <Icon name="add-comment" size={24} color={theme.colors.onSurface} />
                     </TouchableOpacity>
                 </View>
 
@@ -464,12 +449,26 @@ const HomePage = ({ route }) => {
                     </View>
                 </KeyboardAvoidingView>
 
-                <CustomProgressBarWithoutProgressModal
-                    visible={loadingModalVisible}
-                    onRequestClose={() => {}}
-                    title="Loading Model"
-                    info={`Loading ${selectedModel}...`}
-                />
+                <Portal>
+                    <Dialog visible={loadingModalVisible}>
+                        <Dialog.Title>Waiting</Dialog.Title>
+                        <Dialog.Content>
+                            <View style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                            }}>
+                                <Text style={[styles.text, { flex: 1 }]}>
+                                    Loading Model {selectedModel}...
+                                </Text>
+                                <ActivityIndicator
+                                    animating={true}
+                                    color={theme.colors.primary}
+                                    size={'large'}
+                                />
+                            </View>
+                        </Dialog.Content>
+                    </Dialog>
+                </Portal>
             </SafeAreaView>
         </View>
     );
