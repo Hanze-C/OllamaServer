@@ -18,10 +18,15 @@ const saveConversation = async (conversationId: string, messages: Message[], sum
 
         // 检查是否已经存在该对话摘要，如果存在则更新，否则添加
         const existingSummaryIndex = summaries.findIndex(summary => summary.id === conversationId);
+        const newSummary= {
+            id: conversationId,
+            summary,
+            lastConversation: new Date().toISOString()
+        }
         if (existingSummaryIndex !== -1) {
-            summaries[existingSummaryIndex] = { id: conversationId, summary };
+            summaries[existingSummaryIndex] = newSummary;
         } else {
-            summaries.push({ id: conversationId, summary });
+            summaries.push(newSummary);
         }
 
         await AsyncStorage.setItem(CONVERSATIONS_SUMMARIES_KEY, JSON.stringify(summaries));

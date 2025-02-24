@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import 'react-native-gesture-handler';
 import {createDrawerNavigator, DrawerContentScrollView, DrawerItem, useDrawerStatus} from "@react-navigation/drawer";
@@ -38,7 +38,9 @@ const DrawerMenu = (props: any) => {
             />
             <Divider />
             {/* 历史对话列表 */}
-            {summaries.map(summary => (
+            {summaries
+                .sort((a, b) => b.lastConversation.localeCompare(a.lastConversation))
+                .map(summary => (
                 <DrawerItem
                     key={summary.id}
                     label={summary.summary}
