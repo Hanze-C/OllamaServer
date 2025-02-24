@@ -29,23 +29,23 @@ type HomeScreenNavigationProp = NavigationProp<ParamListBase> & DrawerNavigation
 const HomePage = ({ route }) => {
     const theme = useAppTheme();
     const insets = useSafeAreaInsets();
-    //加载模型
+    // 加载模型
     const [loadingModalVisible, setLoadingModalVisible] = useState(false)
-    //输入消息
+    // 输入消息
     const [message, setMessage] = useState('');
-    // 使用state触发渲染
-    const [messagesState, setMessagesState] = useState<Message[]>([]);
+    // 保持用 ref 存储实时数据，state 仅用于触发渲染
+    const [_, forceUpdate] = useState({}); // 仅用于触发渲染的 dummy state
     // 使用ref保持最新值
     const messagesRef = useRef<Message[]>([]);
-    //模型选择
+    // 模型选择
     const [selectedModel, setSelectedModel] = useState<string>('Select Model');
-    //消息列表
+    // 消息列表
     const flatListRef = useRef<FlatList<Message>>(null);
-    //正在接收消息
+    // 正在接收消息
     const [chatting, setChatting] = useState(false)
-    //接收到的消息请求
+    // 接收到的消息请求
     const chatSessionRef = useRef<ChatSessionType | null>(null);
-    //对话唯一标识
+    // 对话唯一标识
     const conversationUuidRef = useRef(uuidv4());
 
     const navigation = useNavigation<HomeScreenNavigationProp>();
@@ -57,7 +57,7 @@ const HomePage = ({ route }) => {
                 const existing = await loadConversation(route.params.conversationId);
                 if (existing) {
                     messagesRef.current = existing.messages;
-                    setMessagesState(existing.messages);
+                    forceUpdate({})
                     conversationUuidRef.current = route.params.conversationId; // 更新当前对话ID
                 }
             }
@@ -76,7 +76,7 @@ const HomePage = ({ route }) => {
                 conversationUuidRef.current = uuidv4();
                 //清除历史消息
                 messagesRef.current = []
-                setMessagesState([]);
+                forceUpdate({})
             })
     };
 
@@ -87,7 +87,7 @@ const HomePage = ({ route }) => {
             let lastMsg = messagesRef.current[messagesRef.current.length - 1];
             lastMsg.content += '(User Cancel)'
             messagesRef.current[messagesRef.current.length - 1] = lastMsg;
-            setMessagesState([...messagesRef.current]);
+            forceUpdate({})
             // 保存对话
             saveConversation(conversationUuidRef.current, messagesRef.current, getSummary(messagesRef.current))
             return
@@ -99,27 +99,26 @@ const HomePage = ({ route }) => {
                 role: 'user',
                 content: message
             }
-            // 同时更新ref和state
             messagesRef.current = [...messagesRef.current, userMsg]
-            setMessagesState(messagesRef.current)
+            forceUpdate({})
             // 保存对话
             saveConversation(conversationUuidRef.current, messagesRef.current, getSummary(messagesRef.current))
             setMessage('')
             flatListRef.current?.scrollToEnd({ animated: true })
 
             chatSessionRef.current = chat(selectedModel, messagesRef.current, chatResponse => {
+                console.log(chatResponse)
                 if (!chatResponse.done) {
+                    //首次获得回答，添加消息
                     // @ts-ignore
-                    if (!addedAssistantMessage) {
+                    if (addedAssistantMessage) {
+                        messagesRef.current[messagesRef.current.length - 1].content += chatResponse.message?.content
+                        forceUpdate({})
+                    } else {
                         addedAssistantMessage = true;
                         // @ts-ignore
                         messagesRef.current = [...messagesRef.current, chatResponse.message]
-                        setMessagesState([...messagesRef.current]);
-                    } else {
-                        let lastMsg = messagesRef.current[messagesRef.current.length - 1];
-                        lastMsg.content += chatResponse.message?.content;
-                        messagesRef.current[messagesRef.current.length - 1] = lastMsg;
-                        setMessagesState([...messagesRef.current]);
+                        forceUpdate({})
                     }
                 }
             })
@@ -418,7 +417,7 @@ const HomePage = ({ route }) => {
                 <View style={styles.messagesContainer}>
                     <FlatList
                         ref={flatListRef}
-                        data={messagesState}
+                        data={messagesRef.current}
                         renderItem={renderMessage}
                         contentContainerStyle={styles.messagesList}
                         showsVerticalScrollIndicator={true}
