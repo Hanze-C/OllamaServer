@@ -12,6 +12,7 @@ import {
 import {tags} from "../api/OllamaApi.ts";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import {useAppTheme} from "../theme/ThemeContext.tsx";
+import { List } from 'react-native-paper';
 
 const ModelSelector = ({ onModelSelect = (model: OllamaModel) => {}, currentModel = 'AI Assistant' }) => {
     const theme = useAppTheme();
@@ -50,7 +51,7 @@ const ModelSelector = ({ onModelSelect = (model: OllamaModel) => {}, currentMode
                 setModels(response.models);
             })
             .catch((err)=>{
-                setError('err');
+                setError('Load Ollama models failed. Maybe Ollama server not running.');
             })
             .finally(()=>{
                 setLoading(false);
@@ -64,12 +65,12 @@ const ModelSelector = ({ onModelSelect = (model: OllamaModel) => {}, currentMode
     };
 
     const renderModel = ({ item }: { item: OllamaModel }) => (
-        <TouchableOpacity
+        <List.Item
+            title={item.name}
+            titleStyle={styles.text}
             style={styles.modelItem}
             onPress={() => handleModelSelect(item)}
-        >
-            <Text style={styles.modelText}>{item.name}</Text>
-        </TouchableOpacity>
+        />
     );
 
     const styles = StyleSheet.create({
@@ -99,7 +100,6 @@ const ModelSelector = ({ onModelSelect = (model: OllamaModel) => {}, currentMode
             marginHorizontal: 20,
             borderRadius: 10,
             maxHeight: '50%',
-            shadowColor: '#000',
             shadowOffset: {
                 width: 0,
                 height: 2,
@@ -110,31 +110,36 @@ const ModelSelector = ({ onModelSelect = (model: OllamaModel) => {}, currentMode
         },
         modelList: {
             flexGrow: 0,
+            backgroundColor: theme.colors.surface,
+            borderRadius: 10
         },
         modelItem: {
             padding: 15,
             borderBottomWidth: StyleSheet.hairlineWidth,
-            borderBottomColor: '#ccc',
-        },
-        modelText: {
-            fontSize: 16,
-            color: '#333',
+            borderBottomColor: theme.colors.primaryContainer,
         },
         loadingContainer: {
             padding: 20,
             alignItems: 'center',
+            backgroundColor: theme.colors.surface,
+            borderRadius: 10
         },
         loadingText: {
             marginTop: 10,
-            color: '#666',
+            color: theme.colors.onSurface,
         },
         errorContainer: {
+            backgroundColor: theme.colors.errorContainer,
+            borderRadius: 10,
             padding: 20,
             alignItems: 'center',
         },
         errorText: {
-            color: '#ff3b30',
+            color: theme.colors.error,
         },
+        text: {
+            color: theme.colors.onSurface
+        }
     });
 
     return (
@@ -177,7 +182,7 @@ const ModelSelector = ({ onModelSelect = (model: OllamaModel) => {}, currentMode
                             <FlatList
                                 data={models}
                                 renderItem={renderModel}
-                                keyExtractor={(item, index) => index.toString()}
+                                keyExtractor={(_, index) => index.toString()}
                                 bounces={false}
                                 showsVerticalScrollIndicator={true}
                                 style={styles.modelList}

@@ -14,6 +14,7 @@ import { formatFileSize } from "../utils/FileUtils.ts";
 const { HashModule, FileUploadModule } = NativeModules;
 import * as DocumentPicker from 'expo-document-picker';
 import {DocumentPickerAsset} from "expo-document-picker";
+import {create} from "../api/OllamaApi.ts";
 
 /**
  * import { uploadModel } from "../utils/OllamaApi.ts"; // 假设有一个 uploadModel 函数
@@ -74,22 +75,38 @@ const UploadModelPage = () => {
             return;
         }
 
-        setUploadingDialogVisible(true);
-        setUploadProgress(0)
-        setUploadInfo(`Uploading model ${modelName}...`);
-
         try {
             await FileUploadModule.uploadFile(
                 file.uri,
                 fileSha256,
             )
+            setUploadingDialogVisible(true);
+            setUploadInfo('Uploading...')
+            create(
+                modelName,
+                {
+                    [file.name]: `sha256:${fileSha256}`
+                },
+                (response)=>{
+                    setUploadInfo(response.status)
+                }
+            )
+                .then((res)=>{
+                    setSnackbarMessage('Create model successful')
+                    setSnackbarVisible(true)
+                })
+                .catch((err)=>{
+                    setSnackbarMessage('Create model failed')
+                    setSnackbarVisible(true)
+                })
+                .finally(()=>{
+                    setUploadingDialogVisible(false);
+                })
         } catch (error) {
             console.error('Upload failed:', error);
             setSnackbarMessage('Upload error');
             setSnackbarVisible(true)
             setUploadInfo('Upload failed');
-        } finally {
-            setUploadingDialogVisible(false);
         }
     };
 
@@ -169,10 +186,19 @@ const UploadModelPage = () => {
                     <Dialog visible={uploadingDialogVisible}>
                         <Dialog.Title>Uploading</Dialog.Title>
                         <Dialog.Content>
-                            <Text style={styles.text}>
-                                {uploadInfo}
-                            </Text>
-                            <ProgressBar progress={uploadProgress} color={theme.colors.primary} />
+                            <View style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                            }}>
+                                <Text style={[styles.text, { flex: 1 }]}>
+                                    {uploadInfo}
+                                </Text>
+                                <ActivityIndicator
+                                    animating={true}
+                                    color={theme.colors.primary}
+                                    size={'large'}
+                                />
+                            </View>
                         </Dialog.Content>
                     </Dialog>
                 </Portal>

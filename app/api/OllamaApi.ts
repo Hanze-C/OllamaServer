@@ -165,6 +165,45 @@ export const unload = async (modelName: string): Promise<LoadResponse> => {
     return await response.json();
 }
 
+export const create = (modelName: string, files: Record<string, string>, createResponseCallback: (response: CreateResponse) => void): Promise<void> => {
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        let buffer = '';
+
+        xhr.open('POST', `${OLLAMA_SERVER}/api/create`);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+
+        xhr.onprogress = function() {
+            const newData = xhr.responseText.substr(buffer.length);
+            buffer += newData;
+
+            const line = newData;
+            if (line.trim() != '') {
+                try {
+                    const response: PullResponse = JSON.parse(line);
+                    createResponseCallback(response);
+                } catch (error) {
+                    throw error;
+                }
+            }
+        };
+
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                resolve();
+            } else {
+                reject(new Error(`HTTP Error: ${xhr.status}`));
+            }
+        };
+
+        xhr.onerror = function() {
+            reject(new Error('Network Error'));
+        };
+
+        xhr.send(JSON.stringify({ model: modelName, files: files }));
+    });
+};
+
 // export const pushBlob = (
 //     digest: string,
 //     file: Blob,

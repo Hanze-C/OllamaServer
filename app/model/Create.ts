@@ -1,0 +1,3 @@
+interface CreateResponse {
+    status: string,
+}

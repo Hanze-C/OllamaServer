@@ -125,6 +125,7 @@ class OllamaExecutor(private val context: Context) {
             val env = processBuilder.environment()
             env["LD_LIBRARY_PATH"] = "$nativeLibDir:${env["LD_LIBRARY_PATH"] ?: ""}"
             env["HOME"] = homeDir
+            env["OLLAMA_DEBUG"] = "1"
 
             processBuilder.start().also { process ->
                 // 必须处理输出流，建议在单独线程中异步处理
