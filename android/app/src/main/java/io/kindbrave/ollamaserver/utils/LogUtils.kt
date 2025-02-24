@@ -8,7 +8,7 @@ import java.io.IOException
 class LogUtils private constructor(private val context: Context) {
 
     companion object {
-        private const val LOG_FILE_NAME = "ollama_log.txt"
+        private const val LOG_FILE_NAME = "ollama.log"
 
         @Volatile
         private var instance: LogUtils? = null

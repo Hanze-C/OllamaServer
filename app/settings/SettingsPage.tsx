@@ -12,6 +12,7 @@ import {useAppTheme} from "../theme/ThemeContext.tsx";
 import {Appbar, Button, Dialog, IconButton, List, Portal, ProgressBar, TextInput} from 'react-native-paper';
 import {OLLAMA_SERVER} from "../api/API.ts";
 import {formatFileSize} from "../utils/FileUtils.ts";
+import LoadingDialog from "../components/LoadingDialog.tsx";
 
 let ollamaServiceModule = NativeModules.OllamaServiceModule;
 
@@ -121,7 +122,7 @@ const SettingsPage = () => {
         }
     };
 
-    //获取模型列表
+    // 获取模型列表
     const handleModelList = () => {
         setModelListDialogVisible(true)
         tags()
@@ -217,14 +218,16 @@ const SettingsPage = () => {
                         description={serverRunning ? 'Ollama Server is Running' : 'Click to Start Ollama Server'}
                         onPress={handleServerStatus}
                     />
-                    <List.Item
-                        title="Server Log"
-                        left={() => <List.Icon icon="note-text" />}
-                        onPress={()=>{
-                            // @ts-ignore
-                            navigation.navigate('Logs')
-                        }}
-                    />
+                    {serverRunning && (
+                        <List.Item
+                            title="Server Log"
+                            left={() => <List.Icon icon="note-text" />}
+                            onPress={()=>{
+                                // @ts-ignore
+                                navigation.navigate('Logs')
+                            }}
+                        />
+                    )}
                     {serverRunning && (
                         <View>
                             <List.Subheader>Model Settings</List.Subheader>
@@ -294,14 +297,11 @@ const SettingsPage = () => {
                         </Dialog.Content>
                     </Dialog>
                 </Portal>
-                <Portal>
-                    <Dialog visible={startingServerDialogVisible}>
-                        <Dialog.Title>Waiting</Dialog.Title>
-                        <Dialog.Content>
-                            <Text style={styles.text}>Ollama server is starting...</Text>
-                        </Dialog.Content>
-                    </Dialog>
-                </Portal>
+                <LoadingDialog
+                    visible={startingServerDialogVisible}
+                    title="Waiting"
+                    message="Ollama server is starting..."
+                />
                 <Portal>
                     <Dialog visible={modelListDialogVisible} onDismiss={() => {setModelListDialogVisible(false)}}>
                         <Dialog.Title>Model List</Dialog.Title>
@@ -340,26 +340,11 @@ const SettingsPage = () => {
                         </Dialog.Actions>
                     </Dialog>
                 </Portal>
-                <Portal>
-                    <Dialog visible={deletingModelDialogVisible}>
-                        <Dialog.Title>Waiting</Dialog.Title>
-                        <Dialog.Content>
-                            <View style={{
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                            }}>
-                                <Text style={[styles.text, { flex: 1 }]}>
-                                    Deleting Model {deleteModelName}...
-                                </Text>
-                                <ActivityIndicator
-                                    animating={true}
-                                    color={theme.colors.primary}
-                                    size={'large'}
-                                />
-                            </View>
-                        </Dialog.Content>
-                    </Dialog>
-                </Portal>
+                <LoadingDialog
+                    visible={deletingModelDialogVisible}
+                    title="Waiting"
+                    message={`Deleting Model ${deleteModelName}...`}
+                />
                 <Portal>
                     <Dialog visible={runningModelDialogVisible} onDismiss={() => {setRunningModelDialogVisible(false)}}>
                         <Dialog.Title>Running Model</Dialog.Title>
@@ -386,26 +371,11 @@ const SettingsPage = () => {
                         </Dialog.Actions>
                     </Dialog>
                 </Portal>
-                <Portal>
-                    <Dialog visible={unloadModelDialogVisible}>
-                        <Dialog.Title>Waiting</Dialog.Title>
-                        <Dialog.Content>
-                            <View style={{
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                            }}>
-                                <Text style={[styles.text, { flex: 1 }]}>
-                                    Unloading Model...
-                                </Text>
-                                <ActivityIndicator
-                                    animating={true}
-                                    color={theme.colors.primary}
-                                    size={'large'}
-                                />
-                            </View>
-                        </Dialog.Content>
-                    </Dialog>
-                </Portal>
+                <LoadingDialog
+                    visible={unloadModelDialogVisible}
+                    title="Waiting"
+                    message="Unloading Model..."
+                />
             </SafeAreaView>
         </View>
     );
