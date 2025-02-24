@@ -309,7 +309,7 @@ const SettingsPage = () => {
                             <ScrollView>
                                 {modelList.map(model => (
                                     <List.Item
-                                        key={model.digest}
+                                        key={model.name}
                                         title={model.name}
                                         description={formatFileSize(model.size)}
                                         right={()=>(
@@ -367,7 +367,7 @@ const SettingsPage = () => {
                             <ScrollView>
                                 {runningModelList.map(model => (
                                     <List.Item
-                                        key={model.digest}
+                                        key={model.name}
                                         title={model.name}
                                         description={formatFileSize(model.size)}
                                         right={()=>(
