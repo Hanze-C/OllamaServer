@@ -12,8 +12,8 @@
   <application
       android:name=".MainApplication"
       android:label="@string/app_name"
-      android:icon="@mipmap/ic_launcher"
-      android:roundIcon="@mipmap/ic_launcher_round"
+      android:icon="@drawable/ollama"
+      android:roundIcon="@drawable/ollama"
       android:allowBackup="true"
       android:theme="@style/MaterialAppTheme"
       android:supportsRtl="true"

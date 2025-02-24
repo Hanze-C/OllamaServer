@@ -4,7 +4,7 @@ import {
     Text,
     SafeAreaView,
     StyleSheet,
-    NativeModules, ToastAndroid, ScrollView, ActivityIndicator,
+    NativeModules, ToastAndroid, ScrollView, ActivityIndicator, Image, TouchableOpacity, Linking,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import {deleteModel, ps, pull, tags, unload} from "../api/OllamaApi.ts";
@@ -13,6 +13,7 @@ import {Appbar, Button, Dialog, IconButton, List, Portal, ProgressBar, TextInput
 import {OLLAMA_SERVER} from "../api/API.ts";
 import {formatFileSize} from "../utils/FileUtils.ts";
 import LoadingDialog from "../components/LoadingDialog.tsx";
+import { name as appName, version } from '../../package.json';
 
 let ollamaServiceModule = NativeModules.OllamaServiceModule;
 
@@ -31,18 +32,20 @@ const SettingsPage = () => {
     const [downloadInfo, setDownloadInfo] = useState('');
     const [modelListDialogVisible, setModelListDialogVisible] = useState(false)
     const [modelList, setModelList] = useState<OllamaModel[]>([])
-    //删除模型确认对话框
+    // 删除模型确认对话框
     const [deleteModelDialogVisible, setDeleteModelDialogVisible] = useState(false)
-    //删除模型名称
+    // 删除模型名称
     const [deleteModelName, setDeleteModelName] = useState('');
-    //删除模型中对话框
+    // 删除模型中对话框
     const [deletingModelDialogVisible, setDeletingModelDialogVisible] = useState(false)
-    //正在运行的模型对话框
+    // 正在运行的模型对话框
     const [runningModelDialogVisible, setRunningModelDialogVisible] = useState(false)
-    //正在运行的模型
+    // 正在运行的模型
     const [runningModelList, setRunningModelList] = useState<OllamaRunningModel[]>([])
-    //关闭正在运行模型对话框
+    // 关闭正在运行模型对话框
     const [unloadModelDialogVisible, setUnloadModelDialogVisible] = useState(false)
+    // 关于对话框
+    const [aboutDialogVisible, setAboutDialogVisible] = useState(false)
 
     const checkServerStatus = async (): Promise<boolean> => {
         try {
@@ -263,7 +266,7 @@ const SettingsPage = () => {
                             <List.Item
                                 title="About"
                                 left={() => <List.Icon icon="information" />}
-                                onPress={()=>{setDownloadModelVisible(true)}}
+                                onPress={()=>{setAboutDialogVisible(true)}}
                             />
                         </View>
                     </List.Section>
@@ -386,6 +389,67 @@ const SettingsPage = () => {
                     title="Waiting"
                     message="Unloading Model..."
                 />
+                <Portal>
+                    <Dialog visible={aboutDialogVisible} onDismiss={() => {setAboutDialogVisible(false)}}>
+                        <Dialog.Content>
+                            <View style={{
+                                flexDirection: 'row',
+                                alignItems: 'flex-start',
+                                gap: 20
+                            }}>
+                                <Image
+                                    source={require('../assets/ollama.png')}
+                                    style={{
+                                        width: 48,
+                                        height: 48,
+                                        borderRadius: 8,
+                                    }}
+                                />
+                                <View style={{
+                                    flex: 1,
+                                    alignItems: 'flex-start'
+                                }}>
+                                    <View>
+                                        <Text style={{
+                                            fontSize: 18,
+                                            fontWeight: '700',
+                                        }}>
+                                            {appName}
+                                        </Text>
+                                        <Text style={{
+                                            color: '#666',
+                                            fontSize: 13,
+                                            letterSpacing: 0.3
+                                        }}>
+                                            v{version}
+                                        </Text>
+                                    </View>
+                                    <Text style={{
+                                        color: '#888',
+                                        fontSize: 12,
+                                    }}>
+                                        Developed by KindBrave
+                                    </Text>
+                                    <TouchableOpacity
+                                        style={{
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                        }}
+                                        onPress={() => Linking.openURL('https://github.com/sunshine0523/OllamaServer')}
+                                    >
+                                        <Text style={{
+                                            color: '#0366d6',
+                                            fontSize: 14,
+                                            textDecorationLine: 'underline'
+                                        }}>
+                                            GitHub Repository
+                                        </Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        </Dialog.Content>
+                    </Dialog>
+                </Portal>
             </SafeAreaView>
         </View>
     );
