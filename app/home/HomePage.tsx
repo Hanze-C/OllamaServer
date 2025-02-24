@@ -14,7 +14,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import {NavigationProp, ParamListBase, useNavigation} from '@react-navigation/native';
 import ModelSelector from "../components/ModelSelector.tsx";
 import {chat, loadModel} from "../api/OllamaApi.ts";
-import Markdown from "react-native-markdown-display";
+import Markdown, {MarkdownIt} from "react-native-markdown-display";
 import {DrawerNavigationProp} from "@react-navigation/drawer";
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
@@ -23,6 +23,7 @@ import {getSummary} from "../utils/ChatUtils.ts";
 import {useAppTheme} from "../theme/ThemeContext.tsx";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 import {Dialog, Portal} from "react-native-paper";
+import thinkPlugin from '../components/markdown/ThinkPlugin'
 
 type HomeScreenNavigationProp = NavigationProp<ParamListBase> & DrawerNavigationProp<ParamListBase>;
 
@@ -47,6 +48,19 @@ const HomePage = ({ route }) => {
     const chatSessionRef = useRef<ChatSessionType | null>(null);
     // 对话唯一标识
     const conversationUuidRef = useRef(uuidv4());
+    const rules = MarkdownIt({ typographer: true }).use(thinkPlugin)
+    const renderRules = {
+        think: (node: any, children: any, parent: any, style: any) => {
+            return (
+                <View key={node.key} style={[styles.thinkContainer, { flexDirection: 'row' }]}>
+                    <View style={styles.thinkIndicator}/>
+                    <View>
+                        {children}
+                    </View>
+                </View>
+            );
+        },
+    }
 
     const navigation = useNavigation<HomeScreenNavigationProp>();
 
@@ -107,7 +121,6 @@ const HomePage = ({ route }) => {
             flatListRef.current?.scrollToEnd({ animated: true })
 
             chatSessionRef.current = chat(selectedModel, messagesRef.current, chatResponse => {
-                console.log(chatResponse)
                 if (!chatResponse.done) {
                     //首次获得回答，添加消息
                     // @ts-ignore
@@ -175,10 +188,10 @@ const HomePage = ({ route }) => {
                 ]}>
                 <Markdown
                     style={item.role === 'assistant' ? assistantMarkdownStyles : userMarkdownStyles}
+                    markdownit={rules}
+                    rules={renderRules}
                 >
-                    {item.content.replace(
-                        /<think>([\s\S]*?)<\/think>/g,
-                        '> $1')}
+                    {item.content}
                 </Markdown>
             </View>
             {item.role !== 'assistant' && (
@@ -389,7 +402,17 @@ const HomePage = ({ route }) => {
         },
         text: {
             color: theme.colors.onSurface
-        }
+        },
+        thinkContainer: {
+            marginVertical: 8,
+            borderRadius: 4,
+            overflow: 'hidden'
+        },
+        thinkIndicator: {
+            width: 4,
+            backgroundColor: theme.colors.onPrimary,
+            marginRight: 8
+        },
     });
 
     return (
@@ -435,7 +458,6 @@ const HomePage = ({ route }) => {
                             onChangeText={setMessage}
                             placeholder="Type your message..."
                             multiline
-                            maxHeight={100}
                             editable={!chatting}
                         />
                         <TouchableOpacity

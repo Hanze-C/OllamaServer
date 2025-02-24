@@ -257,6 +257,14 @@ const SettingsPage = () => {
                             />
                         </View>
                     )}
+                    <View>
+                        <List.Subheader>App Settings</List.Subheader>
+                        <List.Item
+                            title="About"
+                            left={() => <List.Icon icon="information" />}
+                            onPress={()=>{setDownloadModelVisible(true)}}
+                        />
+                    </View>
                 </List.Section>
 
                 <Portal>
