@@ -210,62 +210,64 @@ const SettingsPage = () => {
                     <Appbar.Content title="Settings"/>
                 </Appbar.Header>
 
-                <List.Section style={styles.settingsContainer}>
-                    <List.Subheader>Server Settings</List.Subheader>
-                    <List.Item
-                        title="Ollama Server Status"
-                        left={() => <List.Icon icon="server" />}
-                        description={serverRunning ? 'Ollama Server is Running' : 'Click to Start Ollama Server'}
-                        onPress={handleServerStatus}
-                    />
-                    {serverRunning && (
+                <ScrollView>
+                    <List.Section style={styles.settingsContainer}>
+                        <List.Subheader>Server Settings</List.Subheader>
                         <List.Item
-                            title="Server Log"
-                            left={() => <List.Icon icon="note-text" />}
-                            onPress={()=>{
-                                // @ts-ignore
-                                navigation.navigate('Logs')
-                            }}
+                            title="Ollama Server Status"
+                            left={() => <List.Icon icon="server" />}
+                            description={serverRunning ? 'Ollama Server is Running' : 'Click to Start Ollama Server'}
+                            onPress={handleServerStatus}
                         />
-                    )}
-                    {serverRunning && (
-                        <View>
-                            <List.Subheader>Model Settings</List.Subheader>
+                        {serverRunning && (
                             <List.Item
-                                title="Download Model"
-                                left={() => <List.Icon icon="cloud-download" />}
-                                onPress={()=>{setDownloadModelVisible(true)}}
-                            />
-                            <List.Item
-                                title="Upload Model"
-                                description="Upload custom .gguf model file to Ollama server"
-                                left={() => <List.Icon icon="upload" />}
+                                title="Server Log"
+                                left={() => <List.Icon icon="note-text" />}
                                 onPress={()=>{
                                     // @ts-ignore
-                                    navigation.navigate('UploadModel')
+                                    navigation.navigate('Logs')
                                 }}
                             />
+                        )}
+                        {serverRunning && (
+                            <View>
+                                <List.Subheader>Model Settings</List.Subheader>
+                                <List.Item
+                                    title="Download Model"
+                                    left={() => <List.Icon icon="cloud-download" />}
+                                    onPress={()=>{setDownloadModelVisible(true)}}
+                                />
+                                <List.Item
+                                    title="Upload Model"
+                                    description="Upload custom .gguf model file to Ollama server"
+                                    left={() => <List.Icon icon="upload" />}
+                                    onPress={()=>{
+                                        // @ts-ignore
+                                        navigation.navigate('UploadModel')
+                                    }}
+                                />
+                                <List.Item
+                                    title="Model List"
+                                    left={() => <List.Icon icon="format-list-text" />}
+                                    onPress={handleModelList}
+                                />
+                                <List.Item
+                                    title="Running Model"
+                                    left={() => <List.Icon icon="rocket-launch" />}
+                                    onPress={handleRunningModel}
+                                />
+                            </View>
+                        )}
+                        <View>
+                            <List.Subheader>App Settings</List.Subheader>
                             <List.Item
-                                title="Model List"
-                                left={() => <List.Icon icon="format-list-text" />}
-                                onPress={handleModelList}
-                            />
-                            <List.Item
-                                title="Running Model"
-                                left={() => <List.Icon icon="rocket-launch" />}
-                                onPress={handleRunningModel}
+                                title="About"
+                                left={() => <List.Icon icon="information" />}
+                                onPress={()=>{setDownloadModelVisible(true)}}
                             />
                         </View>
-                    )}
-                    <View>
-                        <List.Subheader>App Settings</List.Subheader>
-                        <List.Item
-                            title="About"
-                            left={() => <List.Icon icon="information" />}
-                            onPress={()=>{setDownloadModelVisible(true)}}
-                        />
-                    </View>
-                </List.Section>
+                    </List.Section>
+                </ScrollView>
 
                 <Portal>
                     <Dialog visible={closeServerVisible}>
