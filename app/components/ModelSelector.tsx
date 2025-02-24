@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
     StyleSheet,
     TouchableOpacity,
@@ -8,6 +8,7 @@ import {
     FlatList,
     ActivityIndicator,
     Animated,
+    useWindowDimensions,
 } from 'react-native';
 import {tags} from "../api/OllamaApi.ts";
 import Icon from "react-native-vector-icons/MaterialIcons";
@@ -23,11 +24,7 @@ const ModelSelector = ({ onModelSelect = (model: OllamaModel) => {}, currentMode
 
     // Animation value for rotate transform
     const rotateAnimation = new Animated.Value(0);
-
-    const rotate = rotateAnimation.interpolate({
-        inputRange: [0, 1],
-        outputRange: ['0deg', '90deg']
-    });
+    const { width: windowWidth } = useWindowDimensions();
 
     const toggleDropdown = () => {
         setVisible(!visible);
@@ -85,6 +82,8 @@ const ModelSelector = ({ onModelSelect = (model: OllamaModel) => {}, currentMode
             fontWeight: '600',
             marginRight: 8,
             color: theme.colors.onSurface,
+            position: 'relative',
+            maxWidth: windowWidth / 2,
         },
         arrow: {
             fontSize: 14,
@@ -149,7 +148,12 @@ const ModelSelector = ({ onModelSelect = (model: OllamaModel) => {}, currentMode
                 onPress={toggleDropdown}
                 activeOpacity={0.7}
             >
-                <Text style={styles.headerText}>{currentModel}</Text>
+                <Text
+                    style={styles.headerText}
+                    numberOfLines={1}
+                    ellipsizeMode='tail'
+                >{currentModel}
+                </Text>
                 <Icon
                     name="keyboard-arrow-down"
                     size={24}
