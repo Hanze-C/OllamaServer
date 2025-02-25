@@ -9,9 +9,11 @@ import {StorageEvent, getAllSummaries, subscribe, unsubscribe, deleteConversatio
 import {useAppTheme} from "../../theme/ThemeContext.tsx";
 import {Button, Dialog, Divider, Portal} from "react-native-paper";
 import {getStyles} from './DrawerMenuStyles.tsx'
+import {useTranslation} from "react-i18next";
 
 const HomeDrawer = () => {
     const Drawer = createDrawerNavigator();
+    const { t, i18n } = useTranslation();
 
     // 当前选中的conversationId
     const [selectedConversationId, setSelectedConversationId] = useState('')
@@ -67,7 +69,7 @@ const HomeDrawer = () => {
                 <SafeAreaView style={styles.safeArea}>
                     <DrawerContentScrollView {...props}>
                         <DrawerItem
-                            label="Settings"
+                            label={t('settings')}
                             labelStyle={{color: theme.colors.onSurface}}
                             icon={() => <Icon name="settings" size={24} color={theme.colors.onSurface} />}
                             onPress={() => props.navigation.navigate('Settings')}
@@ -106,7 +108,11 @@ const HomeDrawer = () => {
                                                 color={theme.colors.onSurface}
                                                 style={styles.icon}
                                             />
-                                            <Text style={[styles.label, { color: theme.colors.onSurface }]}>
+                                            <Text
+                                                style={[styles.label, { color: theme.colors.onSurface }]}
+                                                numberOfLines={1}
+                                                ellipsizeMode="tail"
+                                            >
                                                 {summary.summary}
                                             </Text>
                                         </View>
@@ -116,13 +122,13 @@ const HomeDrawer = () => {
                     </DrawerContentScrollView>
                     <Portal>
                         <Dialog visible={deleteConversationDialog}>
-                            <Dialog.Title>Delete Conversation</Dialog.Title>
+                            <Dialog.Title>{t('deleteConversationTitle')}</Dialog.Title>
                             <Dialog.Content>
-                                <Text style={styles.text}>Do you want to delete conversation {deleteConversationSummary?.summary}?</Text>
+                                <Text style={styles.text}>{t('deleteConversationMsg')} {deleteConversationSummary?.summary}?</Text>
                             </Dialog.Content>
                             <Dialog.Actions>
-                                <Button onPress={() => handleDeleteConversation()}>Ok</Button>
-                                <Button onPress={() => setDeleteConversationDialog(false)}>Cancel</Button>
+                                <Button onPress={() => handleDeleteConversation()}>{t('ok')}</Button>
+                                <Button onPress={() => setDeleteConversationDialog(false)}>{t('cancel')}</Button>
                             </Dialog.Actions>
                         </Dialog>
                     </Portal>

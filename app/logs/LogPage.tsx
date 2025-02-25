@@ -1,10 +1,11 @@
 import React, {useEffect, useRef, useState} from 'react';
-import {SafeAreaView, StyleSheet, Text, TouchableOpacity, View, ScrollView} from 'react-native'; // 添加 ScrollView 导入
+import {SafeAreaView, StyleSheet, Text, View, ScrollView} from 'react-native'; // 添加 ScrollView 导入
 import RNFS from 'react-native-fs';
 import {useNavigation} from "@react-navigation/native";
 import {Appbar} from "react-native-paper";
 import {useAppTheme} from "../theme/ThemeContext.tsx";
 import LoadingDialog from "../components/LoadingDialog.tsx";
+import {useTranslation} from "react-i18next";
 
 const readLogsFromFile = async (startPosition: number) => {
     const filePath = `${RNFS.DocumentDirectoryPath}/logs/ollama.log`;
@@ -31,6 +32,7 @@ const readLogsFromFile = async (startPosition: number) => {
 
 const LogPage = () => {
     const theme = useAppTheme();
+    const { t, i18n } = useTranslation();
     const navigation = useNavigation();
     const scrollViewRef = useRef<ScrollView>(null);
     const [logs, setLogs] = useState<string>("");
@@ -70,6 +72,10 @@ const LogPage = () => {
         };
     }, []);
 
+    const saveLog = async () => {
+
+    }
+
     const styles = StyleSheet.create({
         container: {
             flex: 1,
@@ -106,9 +112,12 @@ const LogPage = () => {
             <SafeAreaView style={styles.safeArea}>
                 <Appbar.Header mode={'center-aligned'} style={styles.header}>
                     <Appbar.BackAction onPress={() => {navigation.goBack()}} />
-                    <Appbar.Content title="Server Log"/>
+                    <Appbar.Content title={t('serverLog')}/>
                     <Appbar.Action icon="arrow-down" onPress={() => {
                         scrollViewRef.current?.scrollToEnd({ animated: true })
+                    }} />
+                    <Appbar.Action icon="content-save" onPress={() => {
+                        saveLog()
                     }} />
                 </Appbar.Header>
 
@@ -121,8 +130,8 @@ const LogPage = () => {
 
                 <LoadingDialog
                     visible={isLoading}
-                    title="Waiting"
-                    message="Loading logs..."
+                    title={t('waiting')}
+                    message={t('loadingLog')}
                 />
             </SafeAreaView>
         </View>

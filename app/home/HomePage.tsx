@@ -24,11 +24,13 @@ import {useAppTheme} from "../theme/ThemeContext.tsx";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 import {Dialog, Portal} from "react-native-paper";
 import thinkPlugin from '../components/markdown/ThinkPlugin'
+import {useTranslation} from "react-i18next";
 
 type HomeScreenNavigationProp = NavigationProp<ParamListBase> & DrawerNavigationProp<ParamListBase>;
 
 const HomePage = ({ route }) => {
     const theme = useAppTheme();
+    const { t, i18n } = useTranslation();
     const insets = useSafeAreaInsets();
     // 加载模型
     const [loadingModalVisible, setLoadingModalVisible] = useState(false)
@@ -39,7 +41,7 @@ const HomePage = ({ route }) => {
     // 使用ref保持最新值
     const messagesRef = useRef<Message[]>([]);
     // 模型选择
-    const [selectedModel, setSelectedModel] = useState<string>('Select Model');
+    const [selectedModel, setSelectedModel] = useState<string>(t('selectedModel'));
     // 消息列表
     const flatListRef = useRef<FlatList<Message>>(null);
     // 正在接收消息
@@ -74,7 +76,6 @@ const HomePage = ({ route }) => {
                 } else {
                     messagesRef.current = []
                 }
-                console.log(messagesRef.current)
                 conversationUuidRef.current = route.params.conversationId;
                 forceUpdate({})
             } else {
@@ -114,7 +115,7 @@ const HomePage = ({ route }) => {
             chatSessionRef.current?.abort()
             setChatting(false)
             let lastMsg = messagesRef.current[messagesRef.current.length - 1];
-            lastMsg.content += '(User Cancel)'
+            lastMsg.content += t('userCancel')
             messagesRef.current[messagesRef.current.length - 1] = lastMsg;
             forceUpdate({})
             // 保存对话
@@ -170,13 +171,13 @@ const HomePage = ({ route }) => {
         loadModel(model.name)
             .then((response: LoadResponse) => {
                 if (response.done_reason != 'load') {
-                    setSelectedModel('AI Assistant')
+                    setSelectedModel(t('assistant'))
                     ToastAndroid.show('Loading Model error', ToastAndroid.SHORT)
                 }
                 setLoadingModalVisible(false);
             })
             .catch((e) => {
-                setSelectedModel('Select Model')
+                setSelectedModel(t("selectedModel"))
                 setLoadingModalVisible(false);
                 ToastAndroid.show(`Loading Model error ${e}`, ToastAndroid.SHORT)
             })
@@ -474,7 +475,7 @@ const HomePage = ({ route }) => {
                             style={styles.input}
                             value={message}
                             onChangeText={setMessage}
-                            placeholder="Type your message..."
+                            placeholder={t('typeMessage')}
                             multiline
                             editable={!chatting}
                         />
@@ -482,7 +483,7 @@ const HomePage = ({ route }) => {
                             style={[styles.sendButton, chatting && styles.cancelButton]}
                             onPress={handleSend}>
                             <Text style={styles.sendButtonText}>
-                                {chatting ? 'Cancel' : 'Send'}
+                                {chatting ? t('cancel') : t('send')}
                             </Text>
                         </TouchableOpacity>
                     </View>
@@ -490,14 +491,14 @@ const HomePage = ({ route }) => {
 
                 <Portal>
                     <Dialog visible={loadingModalVisible}>
-                        <Dialog.Title>Waiting</Dialog.Title>
+                        <Dialog.Title>{t('waiting')}</Dialog.Title>
                         <Dialog.Content>
                             <View style={{
                                 flexDirection: 'row',
                                 alignItems: 'center',
                             }}>
                                 <Text style={[styles.text, { flex: 1 }]}>
-                                    Loading Model {selectedModel}...
+                                    {t('loadingModel')} {selectedModel}...
                                 </Text>
                                 <ActivityIndicator
                                     animating={true}

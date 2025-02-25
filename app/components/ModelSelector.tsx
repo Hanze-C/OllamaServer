@@ -14,9 +14,11 @@ import {tags} from "../api/OllamaApi.ts";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import {useAppTheme} from "../theme/ThemeContext.tsx";
 import { List } from 'react-native-paper';
+import {useTranslation} from "react-i18next";
 
 const ModelSelector = ({ onModelSelect = (model: OllamaModel) => {}, currentModel = 'AI Assistant' }) => {
     const theme = useAppTheme();
+    const { t, i18n } = useTranslation();
     const [visible, setVisible] = useState(false);
     const [models, setModels] = useState<OllamaModel[]>([]);
     const [loading, setLoading] = useState(false);
@@ -48,7 +50,7 @@ const ModelSelector = ({ onModelSelect = (model: OllamaModel) => {}, currentMode
                 setModels(response.models);
             })
             .catch((err)=>{
-                setError('Load Ollama models failed. Maybe Ollama server not running.');
+                setError(t('loadModelFailed'));
             })
             .finally(()=>{
                 setLoading(false);

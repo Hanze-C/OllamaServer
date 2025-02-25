@@ -5,28 +5,25 @@ import {
     SafeAreaView,
     StyleSheet,
     ScrollView,
-    ActivityIndicator, NativeModules, NativeEventEmitter,
+    ActivityIndicator, NativeModules,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAppTheme } from "../theme/ThemeContext.tsx";
-import {Appbar, Button, Dialog, IconButton, List, Portal, ProgressBar, Snackbar, TextInput} from 'react-native-paper';
+import {Appbar, Button, Dialog, Portal, Snackbar, TextInput} from 'react-native-paper';
 import { formatFileSize } from "../utils/FileUtils.ts";
 const { HashModule, FileUploadModule } = NativeModules;
 import * as DocumentPicker from 'expo-document-picker';
 import {DocumentPickerAsset} from "expo-document-picker";
 import {create} from "../api/OllamaApi.ts";
-
-/**
- * import { uploadModel } from "../utils/OllamaApi.ts"; // 假设有一个 uploadModel 函数
- */
+import {useTranslation} from "react-i18next";
 
 const UploadModelPage = () => {
     const theme = useAppTheme();
+    const { t, i18n } = useTranslation();
     const navigation = useNavigation();
 
     const [modelName, setModelName] = useState('');
     const [uploadingDialogVisible, setUploadingDialogVisible] = useState(false);
-    const [uploadProgress, setUploadProgress] = useState(0)
     const [uploadInfo, setUploadInfo] = useState('');
     const [file, setFile] = useState<DocumentPickerAsset>();
     const [fileSha256, setFileSha256] = useState<string>('')
@@ -50,17 +47,16 @@ const UploadModelPage = () => {
                             setFileSha256(hash);
                         })
                         .catch((err: any) => {
-                            setSnackbarMessage('Calculate SHA-256 error');
+                            setSnackbarMessage(t('calculateShaFailed'));
                             setSnackbarVisible(true);
                         })
                 } else {
-                    setSnackbarMessage('Please select a .gguf file')
+                    setSnackbarMessage(t('fileTypeError'))
                     setSnackbarVisible(true)
                 }
             }
         }).catch((error)=>{
-            console.log(error)
-            setSnackbarMessage('Select .gguf file error')
+            setSnackbarMessage(t('selectFileError'))
             setSnackbarVisible(true)
             setLoadingDialogVisible(false);
         }).finally(()=>{
@@ -70,7 +66,7 @@ const UploadModelPage = () => {
 
     const handleUpload = async () => {
         if (!modelName || !file) {
-            setSnackbarMessage('Please enter model name and select a file')
+            setSnackbarMessage(t('modelNameError'))
             setSnackbarVisible(true)
             return;
         }
@@ -92,21 +88,20 @@ const UploadModelPage = () => {
                 }
             )
                 .then((res)=>{
-                    setSnackbarMessage('Create model successful')
+                    setSnackbarMessage(t('createModelSuccessful'))
                     setSnackbarVisible(true)
                 })
                 .catch((err)=>{
-                    setSnackbarMessage('Create model failed')
+                    setSnackbarMessage("createModelFailed")
                     setSnackbarVisible(true)
                 })
                 .finally(()=>{
                     setUploadingDialogVisible(false);
                 })
         } catch (error) {
-            console.error('Upload failed:', error);
-            setSnackbarMessage('Upload error');
+            setSnackbarMessage(t('uploadFailed'));
             setSnackbarVisible(true)
-            setUploadInfo('Upload failed');
+            setUploadInfo(t('uploadFailed'));
         }
     };
 
@@ -131,13 +126,13 @@ const UploadModelPage = () => {
             <SafeAreaView style={styles.safeArea}>
                 <Appbar.Header mode={'center-aligned'}>
                     <Appbar.BackAction onPress={() => navigation.goBack()} />
-                    <Appbar.Content title="Upload Model" />
+                    <Appbar.Content title={t('uploadModel')} />
                 </Appbar.Header>
 
                 <ScrollView style={styles.uploadContainer}>
                     <TextInput
                         mode="outlined"
-                        label="Enter the model name"
+                        label={t('enterModelName')}
                         onChangeText={(text) => setModelName(text)}
                         value={modelName}
                         style={{ marginVertical: 8 }}
@@ -145,33 +140,33 @@ const UploadModelPage = () => {
                     {file && (
                         <View>
                             <Text style={styles.text}>
-                                Selected File: {file.name}
+                                {t('selectedFile')}: {file.name}
                             </Text>
                             <Text style={styles.text}>
-                                File Size: {formatFileSize(file.size ? file.size : 0)}
+                                {t('fileSize')}: {formatFileSize(file.size ? file.size : 0)}
                             </Text>
                             <Text style={styles.text}>
-                                File SHA256: {fileSha256}
+                                {t('fileSha')}: {fileSha256}
                             </Text>
                         </View>
                     )}
                     <Button mode="contained" onPress={handleFileSelection} style={{ marginVertical: 8 }}>
-                        Select File
+                        {t('selectFile')}
                     </Button>
                     <Button mode="contained" onPress={handleUpload} style={{ marginVertical: 8 }}>
-                        Upload
+                        {t('upload')}
                     </Button>
                 </ScrollView>
                 <Portal>
                     <Dialog visible={loadingDialogVisible}>
-                        <Dialog.Title>Waiting</Dialog.Title>
+                        <Dialog.Title>{t('waiting')}</Dialog.Title>
                         <Dialog.Content>
                             <View style={{
                                 flexDirection: 'row',
                                 alignItems: 'center',
                             }}>
                                 <Text style={[styles.text, { flex: 1 }]}>
-                                    Loading model file {file?.name}...
+                                    {t('loadingModelFile')} {file?.name}...
                                 </Text>
                                 <ActivityIndicator
                                     animating={true}
@@ -184,7 +179,7 @@ const UploadModelPage = () => {
                 </Portal>
                 <Portal>
                     <Dialog visible={uploadingDialogVisible}>
-                        <Dialog.Title>Uploading</Dialog.Title>
+                        <Dialog.Title>{t('uploading')}</Dialog.Title>
                         <Dialog.Content>
                             <View style={{
                                 flexDirection: 'row',

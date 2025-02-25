@@ -8,6 +8,7 @@ import HomeDrawer from "./components/drawer/DrawerMenu.tsx";
 import {Material3ThemeProvider} from "./theme/ThemeContext.tsx";
 import {SafeAreaProvider} from "react-native-safe-area-context";
 import UploadModelPage from "./upload/UploadModelPage.tsx";
+import './i18n/i18next';
 
 const Stack = createNativeStackNavigator();
 

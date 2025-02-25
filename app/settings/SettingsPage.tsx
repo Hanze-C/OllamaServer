@@ -14,11 +14,13 @@ import {OLLAMA_SERVER} from "../api/API.ts";
 import {formatFileSize} from "../utils/FileUtils.ts";
 import LoadingDialog from "../components/LoadingDialog.tsx";
 import { name as appName, version } from '../../package.json';
+import {useTranslation} from "react-i18next";
 
 let ollamaServiceModule = NativeModules.OllamaServiceModule;
 
 const SettingsPage = () => {
     const theme = useAppTheme();
+    const { t, i18n } = useTranslation();
 
     const navigation = useNavigation();
     const DEEPSEEK = 'deepseek-r1:1.5b';
@@ -110,7 +112,7 @@ const SettingsPage = () => {
     const handleConfirmDownload = async () => {
         if (modelName) {
             setDownloadProgress(0);
-            setDownloadInfo('Starting download...');
+            setDownloadInfo(t('startingDownload'));
             setDownloadModelVisible(false);
             setDownloadProgressModelVisible(true)
             await pull(modelName, (pullResponse: PullResponse) => {
@@ -210,21 +212,21 @@ const SettingsPage = () => {
             <SafeAreaView style={styles.safeArea}>
                 <Appbar.Header mode={'center-aligned'}>
                     <Appbar.BackAction onPress={() => {navigation.goBack()}} />
-                    <Appbar.Content title="Settings"/>
+                    <Appbar.Content title={t('settings')}/>
                 </Appbar.Header>
 
                 <ScrollView>
                     <List.Section style={styles.settingsContainer}>
-                        <List.Subheader>Server Settings</List.Subheader>
+                        <List.Subheader>{t('serverSettings')}</List.Subheader>
                         <List.Item
-                            title="Ollama Server Status"
+                            title={t('serverStatus')}
                             left={() => <List.Icon icon="server" />}
-                            description={serverRunning ? 'Ollama Server is Running' : 'Click to Start Ollama Server'}
+                            description={serverRunning ? t('serverRunning') : t('serverNotRunning')}
                             onPress={handleServerStatus}
                         />
                         {serverRunning && (
                             <List.Item
-                                title="Server Log"
+                                title={t('serverLog')}
                                 left={() => <List.Icon icon="note-text" />}
                                 onPress={()=>{
                                     // @ts-ignore
@@ -234,15 +236,15 @@ const SettingsPage = () => {
                         )}
                         {serverRunning && (
                             <View>
-                                <List.Subheader>Model Settings</List.Subheader>
+                                <List.Subheader>{t('modelSettings')}</List.Subheader>
                                 <List.Item
-                                    title="Download Model"
+                                    title={t('downloadModel')}
                                     left={() => <List.Icon icon="cloud-download" />}
                                     onPress={()=>{setDownloadModelVisible(true)}}
                                 />
                                 <List.Item
-                                    title="Upload Model"
-                                    description="Upload custom .gguf model file to Ollama server"
+                                    title={t('uploadModel')}
+                                    description={t('uploadModelDesc')}
                                     left={() => <List.Icon icon="upload" />}
                                     onPress={()=>{
                                         // @ts-ignore
@@ -250,21 +252,21 @@ const SettingsPage = () => {
                                     }}
                                 />
                                 <List.Item
-                                    title="Model List"
+                                    title={t('modelList')}
                                     left={() => <List.Icon icon="format-list-text" />}
                                     onPress={handleModelList}
                                 />
                                 <List.Item
-                                    title="Running Model"
+                                    title={t('runningModel')}
                                     left={() => <List.Icon icon="rocket-launch" />}
                                     onPress={handleRunningModel}
                                 />
                             </View>
                         )}
                         <View>
-                            <List.Subheader>App Settings</List.Subheader>
+                            <List.Subheader>{t('appSettings')}</List.Subheader>
                             <List.Item
-                                title="About"
+                                title={t('about')}
                                 left={() => <List.Icon icon="information" />}
                                 onPress={()=>{setAboutDialogVisible(true)}}
                             />
@@ -274,36 +276,36 @@ const SettingsPage = () => {
 
                 <Portal>
                     <Dialog visible={closeServerVisible}>
-                        <Dialog.Title>Close Server</Dialog.Title>
+                        <Dialog.Title>{t('closeServer')}</Dialog.Title>
                         <Dialog.Content>
-                            <Text style={styles.text}>Do you want to close server?</Text>
+                            <Text style={styles.text}>{t('closeServerMsg')}</Text>
                         </Dialog.Content>
                         <Dialog.Actions>
-                            <Button onPress={() => handleCloseServer()}>Ok</Button>
-                            <Button onPress={() => setCloseServerVisible(false)}>Cancel</Button>
+                            <Button onPress={() => handleCloseServer()}>{t('ok')}</Button>
+                            <Button onPress={() => setCloseServerVisible(false)}>{t('cancel')}</Button>
                         </Dialog.Actions>
                     </Dialog>
                 </Portal>
                 <Portal>
                     <Dialog visible={downloadModelVisible} onDismiss={()=>{setDownloadModelVisible(false)}}>
-                        <Dialog.Title>Download Model</Dialog.Title>
+                        <Dialog.Title>{t('downloadModel')}</Dialog.Title>
                         <TextInput
                             mode="outlined"
-                            label="Enter the model information"
+                            label={t('enterInformation')}
                             onChangeText={(text)=>{setModelName(text)}}
                             placeholder={DEEPSEEK}
                             defaultValue={modelName}
                             style={{ marginHorizontal: 16, marginVertical: 8 }}
                         />
                         <Dialog.Actions>
-                            <Button onPress={() => setDownloadModelVisible(false)}>Cancel</Button>
-                            <Button onPress={() => handleConfirmDownload()}>Ok</Button>
+                            <Button onPress={() => setDownloadModelVisible(false)}>{t('cancel')}</Button>
+                            <Button onPress={() => handleConfirmDownload()}>{t('ok')}</Button>
                         </Dialog.Actions>
                     </Dialog>
                 </Portal>
                 <Portal>
                     <Dialog visible={downloadProgressModelVisible}>
-                        <Dialog.Title>Downloading {modelName}</Dialog.Title>
+                        <Dialog.Title>{t('downloading')} {modelName}</Dialog.Title>
                         <Dialog.Content>
                             <Text style={styles.text}>{downloadInfo}</Text>
                             <ProgressBar progress={downloadProgress} color={theme.colors.primary} />
@@ -312,12 +314,12 @@ const SettingsPage = () => {
                 </Portal>
                 <LoadingDialog
                     visible={startingServerDialogVisible}
-                    title="Waiting"
-                    message="Ollama server is starting..."
+                    title={t('waiting')}
+                    message={t('serverStarting')}
                 />
                 <Portal>
                     <Dialog visible={modelListDialogVisible} onDismiss={() => {setModelListDialogVisible(false)}}>
-                        <Dialog.Title>Model List</Dialog.Title>
+                        <Dialog.Title>{t('modelList')}</Dialog.Title>
                         <Dialog.ScrollArea>
                             <ScrollView>
                                 {modelList.map(model => (
@@ -337,15 +339,15 @@ const SettingsPage = () => {
                             </ScrollView>
                         </Dialog.ScrollArea>
                         <Dialog.Actions>
-                            <Button onPress={() => setModelListDialogVisible(false)}>Ok</Button>
+                            <Button onPress={() => setModelListDialogVisible(false)}>{t('ok')}</Button>
                         </Dialog.Actions>
                     </Dialog>
                 </Portal>
                 <Portal>
                     <Dialog visible={deleteModelDialogVisible}>
-                        <Dialog.Title>Delete Model</Dialog.Title>
+                        <Dialog.Title>{t('deleteModel')}</Dialog.Title>
                         <Dialog.Content>
-                            <Text style={styles.text}>Do you want to delete {deleteModelName}?</Text>
+                            <Text style={styles.text}>{t('deleteModelMsg')} {deleteModelName}?</Text>
                         </Dialog.Content>
                         <Dialog.Actions>
                             <Button onPress={() => handleDeleteModel()}>Ok</Button>
@@ -355,12 +357,12 @@ const SettingsPage = () => {
                 </Portal>
                 <LoadingDialog
                     visible={deletingModelDialogVisible}
-                    title="Waiting"
-                    message={`Deleting Model ${deleteModelName}...`}
+                    title={t('waiting')}
+                    message={`${t('deleteModel')} ${deleteModelName}...`}
                 />
                 <Portal>
                     <Dialog visible={runningModelDialogVisible} onDismiss={() => {setRunningModelDialogVisible(false)}}>
-                        <Dialog.Title>Running Model</Dialog.Title>
+                        <Dialog.Title>{t('runningModel')}</Dialog.Title>
                         <Dialog.ScrollArea>
                             <ScrollView>
                                 {runningModelList.map(model => (
@@ -380,14 +382,14 @@ const SettingsPage = () => {
                             </ScrollView>
                         </Dialog.ScrollArea>
                         <Dialog.Actions>
-                            <Button onPress={() => setRunningModelDialogVisible(false)}>Ok</Button>
+                            <Button onPress={() => setRunningModelDialogVisible(false)}>{t('ok')}</Button>
                         </Dialog.Actions>
                     </Dialog>
                 </Portal>
                 <LoadingDialog
                     visible={unloadModelDialogVisible}
-                    title="Waiting"
-                    message="Unloading Model..."
+                    title={t('waiting')}
+                    message={t('unloadModel')}
                 />
                 <Portal>
                     <Dialog visible={aboutDialogVisible} onDismiss={() => {setAboutDialogVisible(false)}}>
@@ -427,7 +429,7 @@ const SettingsPage = () => {
                                     <Text style={{
                                         color: theme.colors.onSurface,
                                     }}>
-                                        Developed by KindBrave
+                                        {t('developer')}
                                     </Text>
                                     <TouchableOpacity
                                         style={{
@@ -441,7 +443,7 @@ const SettingsPage = () => {
                                             fontSize: 14,
                                             textDecorationLine: 'underline'
                                         }}>
-                                            GitHub Repository
+                                            {t('githubRepo')}
                                         </Text>
                                     </TouchableOpacity>
                                 </View>
