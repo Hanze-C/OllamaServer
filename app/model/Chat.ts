@@ -30,7 +30,8 @@ interface ChatResponse {
     prompt_eval_count: number | null,
     prompt_eval_duration: number | null,
     eval_count: number | null,
-    eval_duration: number | null
+    eval_duration: number | null,
+    error?: Error;
 }
 
 type ChatSessionType = {

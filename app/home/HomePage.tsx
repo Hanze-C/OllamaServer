@@ -47,7 +47,7 @@ const HomePage = ({ route }) => {
     // 接收到的消息请求
     const chatSessionRef = useRef<ChatSessionType | null>(null);
     // 对话唯一标识
-    const conversationUuidRef = useRef(uuidv4());
+    const conversationUuidRef = useRef<string>(uuidv4());
     const rules = MarkdownIt({ typographer: true }).use(thinkPlugin)
     const renderRules = {
         think: (node: any, children: any, parent: any, style: any) => {
@@ -71,9 +71,17 @@ const HomePage = ({ route }) => {
                 const existing = await loadConversation(route.params.conversationId);
                 if (existing) {
                     messagesRef.current = existing.messages;
-                    forceUpdate({})
-                    conversationUuidRef.current = route.params.conversationId; // 更新当前对话ID
+                } else {
+                    messagesRef.current = []
                 }
+                console.log(messagesRef.current)
+                conversationUuidRef.current = route.params.conversationId;
+                forceUpdate({})
+            } else {
+                // 进入APP更新对话id
+                route.params?.updateConversationId(conversationUuidRef.current)
+                messagesRef.current = []
+                forceUpdate({})
             }
         };
         loadExistingConversation();
@@ -86,8 +94,15 @@ const HomePage = ({ route }) => {
         }
         saveConversation(conversationUuidRef.current, messagesRef.current, getSummary(messagesRef.current))
             .then(r => {
+
+            })
+            .catch((err)=>{
+
+            })
+            .finally(()=>{
                 //更新对话唯一表示
                 conversationUuidRef.current = uuidv4();
+                route.params?.updateConversationId(conversationUuidRef.current)
                 //清除历史消息
                 messagesRef.current = []
                 forceUpdate({})
@@ -121,6 +136,9 @@ const HomePage = ({ route }) => {
             flatListRef.current?.scrollToEnd({ animated: true })
 
             chatSessionRef.current = chat(selectedModel, messagesRef.current, chatResponse => {
+                if (chatResponse.error) {
+                    return
+                }
                 if (!chatResponse.done) {
                     //首次获得回答，添加消息
                     // @ts-ignore
@@ -164,8 +182,8 @@ const HomePage = ({ route }) => {
             })
     };
 
-    const renderMessage: ListRenderItem<Message> = ({ item }) => (
-        <View style={[
+    const renderMessage: ListRenderItem<Message> = ({ item }) => {
+        return <View style={[
             styles.messageRow,
             item.role === 'assistant' ? styles.botMessageRow : styles.userMessageRow
         ]}>
@@ -207,7 +225,7 @@ const HomePage = ({ route }) => {
                 </View>
             )}
         </View>
-    );
+    };
 
     const assistantMarkdownStyles = {
         heading1: {
