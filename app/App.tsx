@@ -4,7 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import SettingsPage from './settings/SettingsPage.tsx';
 import LogPage from './logs/LogPage.tsx';
-import HomeDrawer from "./components/DrawerMenu.tsx";
+import HomeDrawer from "./components/drawer/DrawerMenu.tsx";
 import {Material3ThemeProvider} from "./theme/ThemeContext.tsx";
 import {SafeAreaProvider} from "react-native-safe-area-context";
 import UploadModelPage from "./upload/UploadModelPage.tsx";

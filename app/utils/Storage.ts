@@ -60,12 +60,20 @@ const saveConversation = async (conversationId: string, messages: Message[], sum
 };
 
 const deleteConversation = async (conversationId: string) => {
-    try {
+    // 删除对话消息
+    const messagesKey = `${CONVERSATIONS_MESSAGES_KEY_PREFIX}${conversationId}`;
+    await AsyncStorage.removeItem(messagesKey);
 
-        emit(StorageEvent.SUMMARIES_UPDATED);
-    } catch (e) {
+    // 更新摘要列表
+    const existingSummaries = await AsyncStorage.getItem(CONVERSATIONS_SUMMARIES_KEY);
+    let summaries: ConversationSummary[] = existingSummaries ? JSON.parse(existingSummaries) : [];
 
-    }
+    // 过滤掉要删除的对话摘要
+    summaries = summaries.filter(summary => summary.id !== conversationId);
+    await AsyncStorage.setItem(CONVERSATIONS_SUMMARIES_KEY, JSON.stringify(summaries));
+
+    // 触发更新事件
+    emit(StorageEvent.SUMMARIES_UPDATED);
 };
 
 const loadConversation = async (id: string) => {
