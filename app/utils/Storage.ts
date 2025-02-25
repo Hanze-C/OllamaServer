@@ -2,8 +2,30 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {Conversation, ConversationSummary} from "../model/Conversation.ts";
 
 const CONVERSATIONS_MESSAGES_KEY_PREFIX = '@conversation_messages_';
-const CONVERSATIONS_SUMMARY_KEY_PREFIX = '@conversation_summary_';
 const CONVERSATIONS_SUMMARIES_KEY = '@conversation_summaries';
+
+type EventHandler = () => void;
+const eventMap = new Map<string, EventHandler[]>();
+
+const StorageEvent = {
+    SUMMARIES_UPDATED: 'summariesUpdated'
+};
+
+const subscribe = (event: string, handler: EventHandler) => {
+    const handlers = eventMap.get(event) || [];
+    handlers.push(handler);
+    eventMap.set(event, handlers);
+};
+
+const unsubscribe = (event: string, handler: EventHandler) => {
+    const handlers = eventMap.get(event) || [];
+    eventMap.set(event, handlers.filter(h => h !== handler));
+};
+
+const emit = (event: string) => {
+    const handlers = eventMap.get(event) || [];
+    handlers.forEach(handler => handler());
+};
 
 const saveConversation = async (conversationId: string, messages: Message[], summary: string) => {
     try {
@@ -30,15 +52,25 @@ const saveConversation = async (conversationId: string, messages: Message[], sum
         }
 
         await AsyncStorage.setItem(CONVERSATIONS_SUMMARIES_KEY, JSON.stringify(summaries));
+
+        emit(StorageEvent.SUMMARIES_UPDATED);
     } catch (e) {
         console.error('Failed to save conversation:', e);
+    }
+};
+
+const deleteConversation = async (conversationId: string) => {
+    try {
+
+        emit(StorageEvent.SUMMARIES_UPDATED);
+    } catch (e) {
+
     }
 };
 
 const loadConversation = async (id: string) => {
     try {
         const messagesKey = `${CONVERSATIONS_MESSAGES_KEY_PREFIX}${id}`;
-        const summaryKey = `${CONVERSATIONS_SUMMARY_KEY_PREFIX}${id}`;
 
         const messagesJson = await AsyncStorage.getItem(messagesKey);
 
@@ -63,5 +95,5 @@ const getAllSummaries = async () => {
     }
 };
 
-export {saveConversation, loadConversation, getAllSummaries};
+export {saveConversation, deleteConversation, loadConversation, getAllSummaries, subscribe, unsubscribe, StorageEvent};
 

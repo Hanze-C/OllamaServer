@@ -5,7 +5,7 @@ import 'react-native-gesture-handler';
 import {createDrawerNavigator, DrawerContentScrollView, DrawerItem, useDrawerStatus} from "@react-navigation/drawer";
 import HomePage from "../home/HomePage.tsx";
 import {ConversationSummary} from "../model/Conversation.ts";
-import {getAllSummaries} from "../utils/Storage.ts";
+import {StorageEvent, getAllSummaries, subscribe, unsubscribe} from "../utils/Storage.ts";
 import {useAppTheme} from "../theme/ThemeContext.tsx";
 import {Divider} from "react-native-paper";
 
@@ -17,14 +17,16 @@ const DrawerMenu = (props: any) => {
     const theme = useAppTheme();
 
     useEffect(() => {
-        const loadSummaries = async () => {
-            if (drawerStatus === 'open') {
-                const data = await getAllSummaries();
-                setSummaries(data);
-            }
+        const handleSummariesUpdate = async () => {
+            const data = await getAllSummaries();
+            setSummaries(data);
         };
-        loadSummaries();
-    }, [drawerStatus]); // 监听抽屉状态变化
+        handleSummariesUpdate();
+        subscribe(StorageEvent.SUMMARIES_UPDATED, handleSummariesUpdate);
+        return () => {
+            unsubscribe(StorageEvent.SUMMARIES_UPDATED, handleSummariesUpdate);
+        };
+    }, []);
 
     return (
         <DrawerContentScrollView {...props}
