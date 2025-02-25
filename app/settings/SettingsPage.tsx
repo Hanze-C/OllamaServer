@@ -413,20 +413,19 @@ const SettingsPage = () => {
                                         <Text style={{
                                             fontSize: 18,
                                             fontWeight: '700',
+                                            color: theme.colors.onSurface,
                                         }}>
                                             {appName}
                                         </Text>
                                         <Text style={{
-                                            color: '#666',
-                                            fontSize: 13,
+                                            color: theme.colors.onSurface,
                                             letterSpacing: 0.3
                                         }}>
                                             v{version}
                                         </Text>
                                     </View>
                                     <Text style={{
-                                        color: '#888',
-                                        fontSize: 12,
+                                        color: theme.colors.onSurface,
                                     }}>
                                         Developed by KindBrave
                                     </Text>
@@ -438,7 +437,7 @@ const SettingsPage = () => {
                                         onPress={() => Linking.openURL('https://github.com/sunshine0523/OllamaServer')}
                                     >
                                         <Text style={{
-                                            color: '#0366d6',
+                                            color: theme.customColors.link,
                                             fontSize: 14,
                                             textDecorationLine: 'underline'
                                         }}>

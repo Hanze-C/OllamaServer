@@ -16,6 +16,23 @@ type Material3ThemeProviderProps = {
     resetTheme: () => void;
 };
 
+type CustomColors = {
+    link: string;
+};
+
+const lightCustomColors: CustomColors = {
+    link: '#0366D6'
+};
+
+const darkCustomColors: CustomColors = {
+    link: '#58A6FF'
+};
+
+type AppTheme = MD3Theme & {
+    colors: Material3Scheme;
+    customColors: CustomColors;
+};
+
 const Material3ThemeProviderContext = createContext<Material3ThemeProviderProps>({} as Material3ThemeProviderProps);
 
 export function Material3ThemeProvider({
@@ -31,8 +48,13 @@ export function Material3ThemeProvider({
         fallbackSourceColor,
     });
 
-    const paperTheme =
-        colorScheme === 'dark' ? { ...MD3DarkTheme, colors: theme.dark } : { ...MD3LightTheme, colors: theme.light };
+    const paperTheme = {
+        ...(colorScheme === 'dark' ? MD3DarkTheme : MD3LightTheme),
+        colors: colorScheme === 'dark' ? theme.dark : theme.light,
+        // 可选：保留独立的自定义颜色对象
+        customColors: colorScheme === 'dark' ? darkCustomColors : lightCustomColors
+    } as AppTheme;
+
     return (
         <Material3ThemeProviderContext.Provider value={{ theme, updateTheme, resetTheme }}>
             <StatusBar
@@ -55,4 +77,4 @@ export function useMaterial3ThemeContext() {
     return ctx;
 }
 
-export const useAppTheme = useTheme<MD3Theme & { colors: Material3Scheme }>;
+export const useAppTheme = useTheme<AppTheme>;
