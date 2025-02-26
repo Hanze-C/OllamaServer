@@ -10,10 +10,12 @@ import {useAppTheme} from "../../theme/ThemeContext.tsx";
 import {Button, Dialog, Divider, Portal} from "react-native-paper";
 import {getStyles} from './DrawerMenuStyles.tsx'
 import {useTranslation} from "react-i18next";
+import {logger} from "../../utils/LogUtils.ts";
 
 const HomeDrawer = () => {
     const Drawer = createDrawerNavigator();
     const { t, i18n } = useTranslation();
+    const log = logger.createModuleLogger('HomeDrawer');
 
     // 当前选中的conversationId
     const [selectedConversationId, setSelectedConversationId] = useState('')
@@ -31,8 +33,14 @@ const HomeDrawer = () => {
 
         useEffect(() => {
             const handleSummariesUpdate = async () => {
-                const data = await getAllSummaries();
-                setSummaries(data);
+                getAllSummaries()
+                    .then((data)=>{
+                        setSummaries(data);
+                    })
+                    .catch((err)=>{
+                        log.error(`Get All Summaries error: ${err}`)
+                    })
+
             };
             handleSummariesUpdate();
             subscribe(StorageEvent.SUMMARIES_UPDATED, handleSummariesUpdate);
@@ -45,7 +53,7 @@ const HomeDrawer = () => {
             if (deleteConversationSummary) {
                 deleteConversation(deleteConversationSummary!!.id)
                     .catch((err)=>{
-
+                        log.error(`Delete Conversation ${deleteConversationSummary} error: ${err}`)
                     })
                     .finally(()=>{
                         if (deleteConversationSummary.id == selectedConversationId) {

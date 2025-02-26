@@ -28,35 +28,31 @@ const emit = (event: string) => {
 };
 
 const saveConversation = async (conversationId: string, messages: Message[], summary: string) => {
-    try {
-        const messagesKey = `${CONVERSATIONS_MESSAGES_KEY_PREFIX}${conversationId}`;
+    const messagesKey = `${CONVERSATIONS_MESSAGES_KEY_PREFIX}${conversationId}`;
 
-        // 存储对话内容
-        await AsyncStorage.setItem(messagesKey, JSON.stringify({ id: conversationId, messages }));
+    // 存储对话内容
+    await AsyncStorage.setItem(messagesKey, JSON.stringify({ id: conversationId, messages }));
 
-        // 更新对话摘要列表
-        const existingSummaries = await AsyncStorage.getItem(CONVERSATIONS_SUMMARIES_KEY);
-        let summaries: ConversationSummary[] = existingSummaries ? JSON.parse(existingSummaries) : [];
+    // 更新对话摘要列表
+    const existingSummaries = await AsyncStorage.getItem(CONVERSATIONS_SUMMARIES_KEY);
+    let summaries: ConversationSummary[] = existingSummaries ? JSON.parse(existingSummaries) : [];
 
-        // 检查是否已经存在该对话摘要，如果存在则更新，否则添加
-        const existingSummaryIndex = summaries.findIndex(summary => summary.id === conversationId);
-        const newSummary= {
-            id: conversationId,
-            summary,
-            lastConversation: new Date().toISOString()
-        }
-        if (existingSummaryIndex !== -1) {
-            summaries[existingSummaryIndex] = newSummary;
-        } else {
-            summaries.push(newSummary);
-        }
-
-        await AsyncStorage.setItem(CONVERSATIONS_SUMMARIES_KEY, JSON.stringify(summaries));
-
-        emit(StorageEvent.SUMMARIES_UPDATED);
-    } catch (e) {
-        console.error('Failed to save conversation:', e);
+    // 检查是否已经存在该对话摘要，如果存在则更新，否则添加
+    const existingSummaryIndex = summaries.findIndex(summary => summary.id === conversationId);
+    const newSummary= {
+        id: conversationId,
+        summary,
+        lastConversation: new Date().toISOString()
     }
+    if (existingSummaryIndex !== -1) {
+        summaries[existingSummaryIndex] = newSummary;
+    } else {
+        summaries.push(newSummary);
+    }
+
+    await AsyncStorage.setItem(CONVERSATIONS_SUMMARIES_KEY, JSON.stringify(summaries));
+
+    emit(StorageEvent.SUMMARIES_UPDATED);
 };
 
 const deleteConversation = async (conversationId: string) => {
@@ -77,30 +73,21 @@ const deleteConversation = async (conversationId: string) => {
 };
 
 const loadConversation = async (id: string) => {
-    try {
-        const messagesKey = `${CONVERSATIONS_MESSAGES_KEY_PREFIX}${id}`;
+    const messagesKey = `${CONVERSATIONS_MESSAGES_KEY_PREFIX}${id}`;
 
-        const messagesJson = await AsyncStorage.getItem(messagesKey);
+    const messagesJson = await AsyncStorage.getItem(messagesKey);
 
-        if (messagesJson != null) {
-            return JSON.parse(messagesJson) as Conversation
-        }
-    } catch (e) {
-        console.error('Failed to load conversation:', e);
+    if (messagesJson != null) {
+        return JSON.parse(messagesJson) as Conversation
     }
 };
 
 const getAllSummaries = async () => {
-    try {
-        const jsonValue = await AsyncStorage.getItem(CONVERSATIONS_SUMMARIES_KEY);
-        if (jsonValue != null) {
-            return JSON.parse(jsonValue) as ConversationSummary[];
-        }
-        return [];
-    } catch (e) {
-        console.error('Failed to get all summaries:', e);
-        return [];
+    const jsonValue = await AsyncStorage.getItem(CONVERSATIONS_SUMMARIES_KEY);
+    if (jsonValue != null) {
+        return JSON.parse(jsonValue) as ConversationSummary[];
     }
+    return [];
 };
 
 export {saveConversation, deleteConversation, loadConversation, getAllSummaries, subscribe, unsubscribe, StorageEvent};

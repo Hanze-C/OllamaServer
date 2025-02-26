@@ -16,10 +16,12 @@ import * as DocumentPicker from 'expo-document-picker';
 import {DocumentPickerAsset} from "expo-document-picker";
 import {create} from "../api/OllamaApi.ts";
 import {useTranslation} from "react-i18next";
+import {logger} from "../utils/LogUtils.ts";
 
 const UploadModelPage = () => {
     const theme = useAppTheme();
     const { t, i18n } = useTranslation();
+    const log = logger.createModuleLogger('UploadModelPage');
     const navigation = useNavigation();
 
     const [modelName, setModelName] = useState('');
@@ -49,6 +51,7 @@ const UploadModelPage = () => {
                         .catch((err: any) => {
                             setSnackbarMessage(t('calculateShaFailed'));
                             setSnackbarVisible(true);
+                            log.error(`Calculate SHA256 error: ${err}`)
                         })
                 } else {
                     setSnackbarMessage(t('fileTypeError'))
@@ -59,6 +62,7 @@ const UploadModelPage = () => {
             setSnackbarMessage(t('selectFileError'))
             setSnackbarVisible(true)
             setLoadingDialogVisible(false);
+            log.error(`Select file error: ${error}`)
         }).finally(()=>{
             setLoadingDialogVisible(false);
         })
@@ -94,6 +98,7 @@ const UploadModelPage = () => {
                 .catch((err)=>{
                     setSnackbarMessage("createModelFailed")
                     setSnackbarVisible(true)
+                    log.error(`Create model error: ${err}`)
                 })
                 .finally(()=>{
                     setUploadingDialogVisible(false);
@@ -102,6 +107,7 @@ const UploadModelPage = () => {
             setSnackbarMessage(t('uploadFailed'));
             setSnackbarVisible(true)
             setUploadInfo(t('uploadFailed'));
+            log.error(`Upload file error: ${error}`)
         }
     };
 

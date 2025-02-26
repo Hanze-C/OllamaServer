@@ -25,12 +25,14 @@ import {useSafeAreaInsets} from "react-native-safe-area-context";
 import {Dialog, Portal} from "react-native-paper";
 import thinkPlugin from '../components/markdown/ThinkPlugin'
 import {useTranslation} from "react-i18next";
+import {logger} from '../utils/LogUtils.ts'
 
 type HomeScreenNavigationProp = NavigationProp<ParamListBase> & DrawerNavigationProp<ParamListBase>;
 
 const HomePage = ({ route }) => {
     const theme = useAppTheme();
     const { t, i18n } = useTranslation();
+    const log = logger.createModuleLogger('HomePage');
     const insets = useSafeAreaInsets();
     // 加载模型
     const [loadingModalVisible, setLoadingModalVisible] = useState(false)
@@ -70,14 +72,20 @@ const HomePage = ({ route }) => {
     useEffect(() => {
         const loadExistingConversation = async () => {
             if (route.params?.conversationId) {
-                const existing = await loadConversation(route.params.conversationId);
-                if (existing) {
-                    messagesRef.current = existing.messages;
-                } else {
-                    messagesRef.current = []
-                }
-                conversationUuidRef.current = route.params.conversationId;
-                forceUpdate({})
+                loadConversation(route.params.conversationId)
+                    .then((existing)=>{
+                        if (existing) {
+                            messagesRef.current = existing.messages;
+                        } else {
+                            messagesRef.current = []
+                        }
+                        conversationUuidRef.current = route.params.conversationId;
+                        forceUpdate({})
+                    })
+                    .catch((err)=>{
+                        log.error(`Load conversation error: ${err}`)
+                    })
+
             } else {
                 // 进入APP更新对话id
                 route.params?.updateConversationId(conversationUuidRef.current)
@@ -94,11 +102,8 @@ const HomePage = ({ route }) => {
             return
         }
         saveConversation(conversationUuidRef.current, messagesRef.current, getSummary(messagesRef.current))
-            .then(r => {
-
-            })
             .catch((err)=>{
-
+                log.error(`Save conversation error: ${err}`)
             })
             .finally(()=>{
                 //更新对话唯一表示
@@ -120,6 +125,9 @@ const HomePage = ({ route }) => {
             forceUpdate({})
             // 保存对话
             saveConversation(conversationUuidRef.current, messagesRef.current, getSummary(messagesRef.current))
+                .catch((err)=>{
+                    log.error(`Save conversation error: ${err}`)
+                })
             return
         }
         if (message.trim()) {
@@ -133,6 +141,9 @@ const HomePage = ({ route }) => {
             forceUpdate({})
             // 保存对话
             saveConversation(conversationUuidRef.current, messagesRef.current, getSummary(messagesRef.current))
+                .catch((err)=>{
+                    log.error(`Save conversation error: ${err}`)
+                })
             setMessage('')
             flatListRef.current?.scrollToEnd({ animated: true })
 
@@ -155,12 +166,16 @@ const HomePage = ({ route }) => {
                 }
             })
             chatSessionRef.current.promise.catch(e => {
-                ToastAndroid.show(`Chat error ${e}`, ToastAndroid.SHORT)
+                ToastAndroid.show(`Chat error`, ToastAndroid.SHORT)
+                log.error(`Chat error ${e}`)
             }).finally(() => {
                 setChatting(false)
                 chatSessionRef.current = null
                 // 回答完毕后保存对话
                 saveConversation(conversationUuidRef.current, messagesRef.current, getSummary(messagesRef.current))
+                    .catch((err)=>{
+                        log.error(`Save conversation error: ${err}`)
+                    })
             })
         }
     }
@@ -180,6 +195,7 @@ const HomePage = ({ route }) => {
                 setSelectedModel(t("selectedModel"))
                 setLoadingModalVisible(false);
                 ToastAndroid.show(`Loading Model error ${e}`, ToastAndroid.SHORT)
+                log.error(`Loading Model error: ${e}`)
             })
     };
 

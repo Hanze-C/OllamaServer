@@ -15,10 +15,12 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import {useAppTheme} from "../theme/ThemeContext.tsx";
 import { List } from 'react-native-paper';
 import {useTranslation} from "react-i18next";
+import {logger} from "../utils/LogUtils.ts";
 
 const ModelSelector = ({ onModelSelect = (model: OllamaModel) => {}, currentModel = 'AI Assistant' }) => {
     const theme = useAppTheme();
     const { t, i18n } = useTranslation();
+    const log = logger.createModuleLogger('ModelSelector');
     const [visible, setVisible] = useState(false);
     const [models, setModels] = useState<OllamaModel[]>([]);
     const [loading, setLoading] = useState(false);
@@ -51,6 +53,7 @@ const ModelSelector = ({ onModelSelect = (model: OllamaModel) => {}, currentMode
             })
             .catch((err)=>{
                 setError(t('loadModelFailed'));
+                log.error(`Get model list error: ${err}`)
             })
             .finally(()=>{
                 setLoading(false);

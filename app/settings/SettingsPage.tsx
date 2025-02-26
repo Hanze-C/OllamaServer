@@ -15,13 +15,14 @@ import {formatFileSize} from "../utils/FileUtils.ts";
 import LoadingDialog from "../components/LoadingDialog.tsx";
 import { name as appName, version } from '../../package.json';
 import {useTranslation} from "react-i18next";
-
-let ollamaServiceModule = NativeModules.OllamaServiceModule;
+import {logger} from "../utils/LogUtils.ts";
+import {modelRecommendList} from "./ModelRecommend.ts";
+const { OllamaServiceModule } = NativeModules;
 
 const SettingsPage = () => {
     const theme = useAppTheme();
     const { t, i18n } = useTranslation();
-
+    const log = logger.createModuleLogger('SettingsPage');
     const navigation = useNavigation();
     const DEEPSEEK = 'deepseek-r1:1.5b';
     const [modelName, setModelName] = useState(DEEPSEEK);
@@ -48,12 +49,15 @@ const SettingsPage = () => {
     const [unloadModelDialogVisible, setUnloadModelDialogVisible] = useState(false)
     // 关于对话框
     const [aboutDialogVisible, setAboutDialogVisible] = useState(false)
+    // 模型推荐对话框
+    const [modelRecommendDialogVisible, setModelRecommendDialogVisible] = useState(false)
 
     const checkServerStatus = async (): Promise<boolean> => {
         try {
             const response = await fetch(OLLAMA_SERVER);
             return response.ok;
         } catch (error) {
+            log.error(`Error checking server status: ${error}`);
             return false;
         }
     };
@@ -78,7 +82,7 @@ const SettingsPage = () => {
         if (serverRunning) {
             setCloseServerVisible(true)
         } else {
-            ollamaServiceModule.startService();
+            await OllamaServiceModule.startService();
             setStartingServerDialogVisible(true);
             // 轮询检测Ollama服务是否启动
             const pollingInterval = setInterval(async () => {
@@ -94,6 +98,7 @@ const SettingsPage = () => {
                 clearInterval(pollingInterval);
                 setStartingServerDialogVisible(false);
                 ToastAndroid.show('Ollama Server start timeout', ToastAndroid.SHORT)
+                log.error('Ollama Server start timeout')
             }, 10000); // 10秒超时
             // 清理函数
             return () => {
@@ -103,9 +108,9 @@ const SettingsPage = () => {
         }
     };
 
-    const handleCloseServer = () => {
+    const handleCloseServer = async () => {
         setCloseServerVisible(false)
-        ollamaServiceModule.stopService();
+        await OllamaServiceModule.stopService();
         setServerRunning(false)
     };
 
@@ -122,10 +127,17 @@ const SettingsPage = () => {
                 setDownloadInfo(pullResponse.status);
             }).catch(e => {
                 ToastAndroid.show('Error: ' + e.message, ToastAndroid.SHORT);
+                log.error(`pull model error: ${e}`)
             })
             setDownloadProgressModelVisible(false)
         }
     };
+
+    const handleRecommendDownload = async (modelName: string)=> {
+        setModelRecommendDialogVisible(false)
+        setModelName(modelName)
+        await handleConfirmDownload()
+    }
 
     // 获取模型列表
     const handleModelList = () => {
@@ -136,6 +148,7 @@ const SettingsPage = () => {
             })
             .catch((err)=>{
                 ToastAndroid.show('Error: ' + err.message, ToastAndroid.SHORT)
+                log.error(`get model list error: ${err}`)
             })
     };
 
@@ -152,6 +165,7 @@ const SettingsPage = () => {
         deleteModel(deleteModelName)
             .catch((err)=>{
                 ToastAndroid.show(`Delete Model ${deleteModelName} error`, ToastAndroid.SHORT)
+                log.error(`Delete Model ${deleteModelName} error: ${err}`)
             })
             .finally(()=>{
                 setDeletingModelDialogVisible(false)
@@ -168,6 +182,7 @@ const SettingsPage = () => {
             })
             .catch((err)=>{
                 ToastAndroid.show(`Get Running Model error`, ToastAndroid.SHORT)
+                log.error(`Get Running Model error: ${err}`)
             })
     }
 
@@ -181,10 +196,12 @@ const SettingsPage = () => {
                     setRunningModelList(runningModelList.filter((runningModel)=>runningModel != model))
                 } else {
                     ToastAndroid.show(`Unload Model ${model.name} error`, ToastAndroid.SHORT)
+                    log.error(`Unload Model ${model.name} error. Response: ${response}`)
                 }
             })
             .catch((err)=>{
                 ToastAndroid.show(`Unload Model ${model.name} error`, ToastAndroid.SHORT)
+                log.error(`Unload Model ${model.name} error: ${err}`)
             })
             .finally(()=>{
                 setUnloadModelDialogVisible(false)
@@ -239,6 +256,7 @@ const SettingsPage = () => {
                                 <List.Subheader>{t('modelSettings')}</List.Subheader>
                                 <List.Item
                                     title={t('downloadModel')}
+                                    description={t('downloadModelDesc')}
                                     left={() => <List.Icon icon="cloud-download" />}
                                     onPress={()=>{setDownloadModelVisible(true)}}
                                 />
@@ -297,6 +315,12 @@ const SettingsPage = () => {
                             defaultValue={modelName}
                             style={{ marginHorizontal: 16, marginVertical: 8 }}
                         />
+                        <Dialog.Actions>
+                            <Button onPress={() => {
+                                setDownloadModelVisible(false)
+                                setModelRecommendDialogVisible(true)
+                            }}>{t('modelRecommendMsg')}</Button>
+                        </Dialog.Actions>
                         <Dialog.Actions>
                             <Button onPress={() => setDownloadModelVisible(false)}>{t('cancel')}</Button>
                             <Button onPress={() => handleConfirmDownload()}>{t('ok')}</Button>
@@ -449,6 +473,55 @@ const SettingsPage = () => {
                                 </View>
                             </View>
                         </Dialog.Content>
+                    </Dialog>
+                </Portal>
+                <Portal>
+                    <Dialog visible={modelRecommendDialogVisible} onDismiss={() => {setModelRecommendDialogVisible(false)}}>
+                        <Dialog.Title>{t('modelRecommend')}</Dialog.Title>
+                        <Dialog.ScrollArea>
+                            <ScrollView>
+                                {modelRecommendList.map(model => (
+                                    <List.Item
+                                        key={model.modelName}
+                                        title={model.modelName}
+                                        description={model.description}
+                                        right={()=>(
+                                            <IconButton
+                                                icon="download"
+                                                onPress={()=>{handleRecommendDownload(model.modelName)}}
+                                            />
+                                        )}
+                                    />
+                                ))}
+                            </ScrollView>
+                        </Dialog.ScrollArea>
+                        <List.Item
+                            title={
+                                <View style={{
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                }}>
+                                    <Text style={styles.text}>
+                                        {t('moreModelsPrompt')}
+                                    </Text>
+                                    <TouchableOpacity onPress={() => Linking.openURL('https://ollama.com/library')}>
+                                        <Text style={{
+                                            color: theme.customColors.link,
+                                        }}>
+                                            {t('ollamaOfficial')}
+                                        </Text>
+                                    </TouchableOpacity>
+                                </View>
+                            }
+                            left={() => <List.Icon icon="information" />}
+                            style={{
+                                paddingVertical: 0,
+                                paddingHorizontal: 16
+                            }}
+                        />
+                        <Dialog.Actions>
+                            <Button onPress={() => setModelRecommendDialogVisible(false)}>{t('ok')}</Button>
+                        </Dialog.Actions>
                     </Dialog>
                 </Portal>
             </SafeAreaView>

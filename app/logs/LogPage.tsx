@@ -1,11 +1,13 @@
 import React, {useEffect, useRef, useState} from 'react';
-import {SafeAreaView, StyleSheet, Text, View, ScrollView} from 'react-native'; // 添加 ScrollView 导入
+import {SafeAreaView, StyleSheet, Text, View, ScrollView, NativeModules} from 'react-native'; // 添加 ScrollView 导入
 import RNFS from 'react-native-fs';
 import {useNavigation} from "@react-navigation/native";
-import {Appbar} from "react-native-paper";
+import {Appbar, Snackbar} from "react-native-paper";
 import {useAppTheme} from "../theme/ThemeContext.tsx";
 import LoadingDialog from "../components/LoadingDialog.tsx";
 import {useTranslation} from "react-i18next";
+import {logger} from "../utils/LogUtils.ts";
+const { LogSaveModule } = NativeModules;
 
 const readLogsFromFile = async (startPosition: number) => {
     const filePath = `${RNFS.DocumentDirectoryPath}/logs/ollama.log`;
@@ -33,12 +35,15 @@ const readLogsFromFile = async (startPosition: number) => {
 const LogPage = () => {
     const theme = useAppTheme();
     const { t, i18n } = useTranslation();
+    const log = logger.createModuleLogger('LogPage');
     const navigation = useNavigation();
     const scrollViewRef = useRef<ScrollView>(null);
     const [logs, setLogs] = useState<string>("");
     // 记录上次日志读取位置
     const lastReadPosition = useRef(0);
     const [isLoading, setIsLoading] = useState(false);
+    const [snackbarVisible, setSnackbarVisible] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('')
 
     useEffect(() => {
         const getLogs = () => {
@@ -58,6 +63,7 @@ const LogPage = () => {
                         lastReadPosition.current = 0;
                         getLogs();
                     }
+                    log.error(`Read logs error: ${err}`)
                 })
                 .finally(()=>{
                     setIsLoading(false)
@@ -72,8 +78,18 @@ const LogPage = () => {
         };
     }, []);
 
-    const saveLog = async () => {
-
+    const saveLog = () => {
+        const filePath = `${RNFS.DocumentDirectoryPath}/logs/ollama.log`;
+        LogSaveModule.saveLogToFile(filePath)
+            .then(()=>{
+                setSnackbarMessage(t('logSaveSuccess'))
+                setSnackbarVisible(true)
+            })
+            .catch((err)=>{
+                setSnackbarMessage(t('logSaveFailed'))
+                setSnackbarVisible(true)
+                log.error(`Save logs error: ${err}`)
+            })
     }
 
     const styles = StyleSheet.create({
@@ -133,6 +149,13 @@ const LogPage = () => {
                     title={t('waiting')}
                     message={t('loadingLog')}
                 />
+                <Snackbar
+                    visible={snackbarVisible}
+                    onDismiss={() => setSnackbarVisible(false)}
+                    duration={3000}
+                >
+                    {snackbarMessage}
+                </Snackbar>
             </SafeAreaView>
         </View>
     );
