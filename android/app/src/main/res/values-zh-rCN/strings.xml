@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">OllamaServer</string>
+    <string name="notification_title">Ollama 正在运行</string>
+    <string name="notification_msg">Ollama 服务正在后台运行中</string>
+    <string name="notification_channel">Ollama 运行通知</string>
+</resources>

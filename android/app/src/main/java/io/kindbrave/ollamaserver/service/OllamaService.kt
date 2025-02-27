@@ -2,10 +2,12 @@ package io.kindbrave.ollamaserver.service
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
+import io.kindbrave.ollamaserver.MainActivity
 import io.kindbrave.ollamaserver.R
 import io.kindbrave.ollamaserver.utils.OllamaExecutor
 
@@ -30,8 +32,9 @@ class OllamaService : Service() {
         createNotificationChannel(channelId)
 
         val notification = NotificationCompat.Builder(this, channelId)
-            .setContentTitle("Ollama 正在运行")
-            .setContentText("AI 推理服务在后台运行中")
+            .setContentTitle(getString(R.string.notification_title))
+            .setContentText(getString(R.string.notification_msg))
+            .setAutoCancel(false)
             .setSmallIcon(R.drawable.ollama)
             .build()
 
@@ -41,7 +44,7 @@ class OllamaService : Service() {
     private fun createNotificationChannel(channelId: String) {
         val channel = NotificationChannel(
             channelId,
-            "Ollama 运行通知",
+            getString(R.string.notification_channel),
             NotificationManager.IMPORTANCE_LOW
         )
         val manager = getSystemService(NotificationManager::class.java)

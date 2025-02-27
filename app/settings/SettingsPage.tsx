@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
     View,
     Text,
@@ -114,7 +114,7 @@ const SettingsPage = () => {
         setServerRunning(false)
     };
 
-    const handleConfirmDownload = async () => {
+    const handleConfirmDownload = async (modelName: string) => {
         if (modelName) {
             setDownloadProgress(0);
             setDownloadInfo(t('startingDownload'));
@@ -136,7 +136,7 @@ const SettingsPage = () => {
     const handleRecommendDownload = async (modelName: string)=> {
         setModelRecommendDialogVisible(false)
         setModelName(modelName)
-        await handleConfirmDownload()
+        await handleConfirmDownload(modelName)
     }
 
     // 获取模型列表
@@ -241,16 +241,14 @@ const SettingsPage = () => {
                             description={serverRunning ? t('serverRunning') : t('serverNotRunning')}
                             onPress={handleServerStatus}
                         />
-                        {serverRunning && (
-                            <List.Item
-                                title={t('serverLog')}
-                                left={() => <List.Icon icon="note-text" />}
-                                onPress={()=>{
-                                    // @ts-ignore
-                                    navigation.navigate('Logs')
-                                }}
-                            />
-                        )}
+                        <List.Item
+                            title={t('serverLog')}
+                            left={() => <List.Icon icon="note-text" />}
+                            onPress={()=>{
+                                // @ts-ignore
+                                navigation.navigate('Logs')
+                            }}
+                        />
                         {serverRunning && (
                             <View>
                                 <List.Subheader>{t('modelSettings')}</List.Subheader>
@@ -323,7 +321,7 @@ const SettingsPage = () => {
                         </Dialog.Actions>
                         <Dialog.Actions>
                             <Button onPress={() => setDownloadModelVisible(false)}>{t('cancel')}</Button>
-                            <Button onPress={() => handleConfirmDownload()}>{t('ok')}</Button>
+                            <Button onPress={() => handleConfirmDownload(modelName)}>{t('ok')}</Button>
                         </Dialog.Actions>
                     </Dialog>
                 </Portal>
