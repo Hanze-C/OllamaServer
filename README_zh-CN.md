@@ -10,6 +10,14 @@ Ollama Server 是一个可以在 Android 设备上一键启动 Ollama 服务的�
 - **无需 Termux**：无需额外的终端仿真环境。
 - **专为 Android 设计**：优化性能，流畅运行。
 
+## 截图
+<div style="display: flex; flex-wrap: wrap; gap: 10px;">
+  <img src="./screenshot/1.png" alt="主界面" style="width: 30%">
+  <img src="./screenshot/2.png" alt="服务状态" style="width: 30%"> 
+  <img src="./screenshot/3.png" alt="模型管理" style="width: 30%">
+</div>
+
+
 ## 安装
 1. 从 [GitHub Releases](https://github.com/your-repo/releases) 下载最新版本。
 2. 在 Android 设备上安装 APK。
