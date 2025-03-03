@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {
     View,
     Text,
@@ -51,6 +51,8 @@ const SettingsPage = () => {
     const [aboutDialogVisible, setAboutDialogVisible] = useState(false)
     // 模型推荐对话框
     const [modelRecommendDialogVisible, setModelRecommendDialogVisible] = useState(false)
+    // 下载模型session引用
+    const pullSessionRef = useRef<PullSessionType | null>(null);
 
     const checkServerStatus = async (): Promise<boolean> => {
         try {
@@ -120,16 +122,21 @@ const SettingsPage = () => {
             setDownloadInfo(t('startingDownload'));
             setDownloadModelVisible(false);
             setDownloadProgressModelVisible(true)
-            await pull(modelName, (pullResponse: PullResponse) => {
+            pullSessionRef.current = pull(modelName, (pullResponse: PullResponse) => {
                 if (pullResponse.completed != null && pullResponse.total != null) {
                     setDownloadProgress(pullResponse.completed / pullResponse.total)
                 }
                 setDownloadInfo(pullResponse.status);
-            }).catch(e => {
-                ToastAndroid.show('Error: ' + e.message, ToastAndroid.SHORT);
-                log.error(`pull model error: ${e}`)
             })
-            setDownloadProgressModelVisible(false)
+            pullSessionRef.current.promise
+                .catch(e => {
+                    ToastAndroid.show('Pull model error', ToastAndroid.SHORT);
+                    log.error(`pull model error: ${e}`)
+                })
+                .finally(() => {
+                    pullSessionRef.current = null
+                    setDownloadProgressModelVisible(false)
+                })
         }
     };
 
@@ -332,6 +339,12 @@ const SettingsPage = () => {
                             <Text style={styles.text}>{downloadInfo}</Text>
                             <ProgressBar progress={downloadProgress} color={theme.colors.primary} />
                         </Dialog.Content>
+                        <Dialog.Actions>
+                            <Button onPress={() => {
+                                pullSessionRef.current?.abort()
+                                setDownloadProgressModelVisible(false)
+                            }}>{t('cancel')}</Button>
+                        </Dialog.Actions>
                     </Dialog>
                 </Portal>
                 <LoadingDialog

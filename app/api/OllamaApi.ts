@@ -1,32 +1,74 @@
 import {OLLAMA_SERVER} from "./API.ts";
-import {NativeModules} from "react-native";
 
-export const pull = (modelName: string, pullResponseCallback: (response: PullResponse) => void, abortController?: AbortController): Promise<void> => {
-    return new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
+// export const pull = (modelName: string, pullResponseCallback: (response: PullResponse) => void, abortController?: AbortController): Promise<void> => {
+//     return new Promise((resolve, reject) => {
+//         const xhr = new XMLHttpRequest();
+//         let buffer = '';
+//
+//         xhr.open('POST', `${OLLAMA_SERVER}/api/pull`);
+//         xhr.setRequestHeader('Content-Type', 'application/json');
+//
+//         if (abortController) {
+//             abortController.signal.addEventListener('abort', () => {
+//                 xhr.abort();
+//                 reject(new Error('Request aborted'));
+//             });
+//         }
+//
+//         xhr.onprogress = function() {
+//             const newData = xhr.responseText.substr(buffer.length);
+//             buffer += newData;
+//
+//             const line = newData;
+//             if (line.trim() != '') {
+//                 try {
+//                     const response: PullResponse = JSON.parse(line);
+//                     pullResponseCallback(response);
+//                 } catch (error) {
+//                     throw error;
+//                 }
+//             }
+//         };
+//
+//         xhr.onload = function() {
+//             if (xhr.status === 200) {
+//                 resolve();
+//             } else {
+//                 reject(new Error(`HTTP Error: ${xhr.status}`));
+//             }
+//         };
+//
+//         xhr.onerror = function() {
+//             reject(new Error('Network Error'));
+//         };
+//
+//         xhr.send(JSON.stringify({ model: modelName }));
+//     });
+// };
+
+export const pull = (
+    modelName: string,
+    pullResponseCallback: (response: PullResponse) => void,
+): PullSessionType => {
+    const xhr = new XMLHttpRequest();
+
+    const promise: Promise<void> = new Promise((resolve, reject) => {
         let buffer = '';
 
         xhr.open('POST', `${OLLAMA_SERVER}/api/pull`);
         xhr.setRequestHeader('Content-Type', 'application/json');
-
-        if (abortController) {
-            abortController.signal.addEventListener('abort', () => {
-                xhr.abort();
-                reject(new Error('Request aborted'));
-            });
-        }
 
         xhr.onprogress = function() {
             const newData = xhr.responseText.substr(buffer.length);
             buffer += newData;
 
             const line = newData;
-            if (line.trim() != '') {
+            if (line.trim() !== '') {
                 try {
                     const response: PullResponse = JSON.parse(line);
                     pullResponseCallback(response);
                 } catch (error) {
-                    throw error;
+                    reject(error);
                 }
             }
         };
@@ -45,6 +87,13 @@ export const pull = (modelName: string, pullResponseCallback: (response: PullRes
 
         xhr.send(JSON.stringify({ model: modelName }));
     });
+
+    return {
+        promise,
+        abort: () => {
+            xhr.abort();
+        }
+    };
 };
 
 // 获取全部模型
