@@ -3,8 +3,9 @@
 [中文](./README_zh-CN.md)
 
 ## Introduction
-**Ollama Server** is a project that allows users to easily infer language models on Android devices without relying on Termux. Enabling them to launch Ollama services with just one click on Android devices.
-Ollama service launched by **Ollama Server** is no different from other methods, and any client that calls Ollama can choose to interact with the API provided by the Ollama service.
+**Ollama Server** is a project that can start Ollama service with one click on Android devices. Without relying on Termux, it allows users to easily infer language models on Android devices.
+
+The Ollama service started by **Ollama Server** is no different from that started by other methods. You can choose any client that calls Ollama to interact with the API provided by Ollama service.
 
 ## Features
 - **One-click deployment**: Easily start and manage the Ollama service.

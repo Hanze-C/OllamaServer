@@ -4,6 +4,7 @@
 
 ## 介绍
 Ollama Server是一个可以在Android设备上一键启动Ollama服务的项目，无需依赖Termux，即可让用户轻松在Android设备上推理语言模型。
+
 Ollama Server所启动的Ollama服务与其他方式启动的没有差异，可以选择任何调用Ollama的客户端与Ollama服务提供的API交互。
 
 ## 特性
