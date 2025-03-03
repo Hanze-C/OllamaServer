@@ -214,7 +214,7 @@ export const unload = async (modelName: string): Promise<LoadResponse> => {
     return await response.json();
 }
 
-export const create = (modelName: string, files: Record<string, string>, createResponseCallback: (response: CreateResponse) => void): Promise<void> => {
+export const create = (modelName: string, files: Record<string, string>, template: string, systemPrompt: string, createResponseCallback: (response: CreateResponse) => void): Promise<void> => {
     return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         let buffer = '';
@@ -249,7 +249,12 @@ export const create = (modelName: string, files: Record<string, string>, createR
             reject(new Error('Network Error'));
         };
 
-        xhr.send(JSON.stringify({ model: modelName, files: files }));
+        xhr.send(JSON.stringify({
+            model: modelName,
+            files: files,
+            template: template,
+            system: systemPrompt,
+        }));
     });
 };
 

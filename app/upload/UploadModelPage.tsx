@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAppTheme } from "../theme/ThemeContext.tsx";
-import {Appbar, Button, Dialog, Portal, Snackbar, TextInput} from 'react-native-paper';
+import {Appbar, Button, Dialog, List, Portal, Snackbar, TextInput} from 'react-native-paper';
 import { formatFileSize } from "../utils/FileUtils.ts";
 const { HashModule, FileUploadModule } = NativeModules;
 import * as DocumentPicker from 'expo-document-picker';
@@ -17,9 +17,12 @@ import {DocumentPickerAsset} from "expo-document-picker";
 import {create} from "../api/OllamaApi.ts";
 import {useTranslation} from "react-i18next";
 import {logger} from "../utils/LogUtils.ts";
+import {getStyles} from "./UploadModelStyles.ts";
+import {DEFAULT_SYSTEM_PROMPT, DEFAULT_TEMPLATE} from "./UploadModelConst.ts";
 
 const UploadModelPage = () => {
     const theme = useAppTheme();
+    const styles = getStyles();
     const { t, i18n } = useTranslation();
     const log = logger.createModuleLogger('UploadModelPage');
     const navigation = useNavigation();
@@ -33,6 +36,8 @@ const UploadModelPage = () => {
     // Snackbar提示
     const [snackbarMessage, setSnackbarMessage] = useState('')
     const [loadingDialogVisible, setLoadingDialogVisible] = useState(false);
+    const [template, setTemplate] = useState(DEFAULT_TEMPLATE);
+    const [systemPrompt, setSystemPrompt] = useState(DEFAULT_SYSTEM_PROMPT);
 
     const handleFileSelection = async () => {
         setLoadingDialogVisible(true);
@@ -87,6 +92,8 @@ const UploadModelPage = () => {
                 {
                     [file.name]: `sha256:${fileSha256}`
                 },
+                template,
+                systemPrompt,
                 (response)=>{
                     setUploadInfo(response.status)
                 }
@@ -96,7 +103,7 @@ const UploadModelPage = () => {
                     setSnackbarVisible(true)
                 })
                 .catch((err)=>{
-                    setSnackbarMessage("createModelFailed")
+                    setSnackbarMessage(t('createModelFailed'))
                     setSnackbarVisible(true)
                     log.error(`Create model error: ${err}`)
                 })
@@ -111,22 +118,6 @@ const UploadModelPage = () => {
         }
     };
 
-    const styles = StyleSheet.create({
-        container: {
-            flex: 1,
-            backgroundColor: theme.colors.surface,
-        },
-        safeArea: {
-            flex: 1,
-        },
-        uploadContainer: {
-            paddingHorizontal: 16,
-        },
-        text: {
-            color: theme.colors.onSurface,
-        },
-    });
-
     return (
         <View style={styles.container}>
             <SafeAreaView style={styles.safeArea}>
@@ -136,13 +127,6 @@ const UploadModelPage = () => {
                 </Appbar.Header>
 
                 <ScrollView style={styles.uploadContainer}>
-                    <TextInput
-                        mode="outlined"
-                        label={t('enterModelName')}
-                        onChangeText={(text) => setModelName(text)}
-                        value={modelName}
-                        style={{ marginVertical: 8 }}
-                    />
                     {file && (
                         <View>
                             <Text style={styles.text}>
@@ -156,6 +140,44 @@ const UploadModelPage = () => {
                             </Text>
                         </View>
                     )}
+                    <TextInput
+                        mode="outlined"
+                        label={t('enterModelName')}
+                        onChangeText={(text) => setModelName(text)}
+                        value={modelName}
+                        style={{ marginVertical: 8 }}
+                    />
+                    {/* 高级设置 */}
+                    <View style={styles.advancedSettingsContainer}>
+                        <Text style={styles.advancedSettingsTitle}>{t('advancedSettings')}</Text>
+                        <List.Item
+                            title={() => (
+                                <Text style={{flex: 1, flexWrap: 'wrap'}}>
+                                    {t('advancedSettingsWarn')}
+                                </Text>
+                            )}
+                            left={() => <List.Icon icon="information" />}
+                            titleStyle={{flex: 1}}
+                            style={{alignItems: 'flex-start'}}
+                        />
+                        <TextInput
+                            mode="outlined"
+                            label={t('template')}
+                            multiline
+                            numberOfLines={3}
+                            value={template}
+                            onChangeText={(text) => setTemplate(text)}
+                            style={{ marginVertical: 8 }}
+                        />
+                        <TextInput
+                            mode="outlined"
+                            label={t('systemPrompt')}
+                            multiline
+                            value={systemPrompt}
+                            onChangeText={(text) => setSystemPrompt(text)}
+                            style={{ marginVertical: 8 }}
+                        />
+                    </View>
                     <Button mode="contained" onPress={handleFileSelection} style={{ marginVertical: 8 }}>
                         {t('selectFile')}
                     </Button>

@@ -64,5 +64,10 @@
   "loadingModelFile": "加载模型文件",
   "uploading": "上传中",
   "selectFile": "选择文件",
-  "upload": "上传"
+  "upload": "上传",
+  "advancedSettings": "高级设置",
+  "template": "Template",
+  "systemPrompt": "System Prompt",
+  "stop": "Stop",
+  "advancedSettingsWarn": "如果你不知道下面的参数是什么，则无需修改"
 }

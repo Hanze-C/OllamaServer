@@ -65,5 +65,10 @@
   "loadingModelFile": "Loading model file",
   "uploading": "Uploading",
   "selectFile": "Select File",
-  "upload": "Upload"
+  "upload": "Upload",
+  "advancedSettings": "Advanced Settings",
+  "template": "Template",
+  "systemPrompt": "System Prompt",
+  "stop": "Stop",
+  "advancedSettingsWarn": "If you don't know what the following parameters are, there is no need to modify them."
 }
